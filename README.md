@@ -3,6 +3,8 @@ An example BTHome v2 example with a presence and a count sensor
 
 This is an example for a DIY BTHome v2 sensor.
 
+The original code is from: https://github.com/TheDigital1/ESP32_BTHome
+
 The header file contains human readable variables for the hex Object ids.
 
 Note: yes = true, no = false for the binary sensors.
