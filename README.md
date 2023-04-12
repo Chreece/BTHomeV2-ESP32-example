@@ -1,7 +1,7 @@
 # BTHomeV2-ESP32-example
 An example BTHome v2 example with a presence and a count sensor
 
-// Notice it's curently under development it doesn't work for more than 1 byte number states \\
+# Notice it's curently under development it doesn't work for more than 1 byte number states
 
 This is an example for a DIY BTHome v2 sensor.
 
