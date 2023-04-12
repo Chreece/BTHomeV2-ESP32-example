@@ -24,8 +24,6 @@ extern "C" {
 }
 #endif
 
-String btaddress = "";
-
 BLEAdvertising *pAdvertising;
 
 void setBeacon() {
@@ -40,8 +38,8 @@ void setBeacon() {
   std::string strServiceData2 = "";
   std::string payload = "";
   
-  String device_name = "People Counter";      // The device name
-  bool encryption = false;                    // Encryption for the messages, should stay false as encryption is not yet implemented on this code (still in develepment)
+  String device_name = "DIY-sensor";      // The device name
+  bool encryption = false;               // Encryption for the messages, should stay false as encryption is not yet implemented on this code (still in develepment)
   
   int dn_length = device_name.length() + 1;
   byte len_buf = dn_length;
