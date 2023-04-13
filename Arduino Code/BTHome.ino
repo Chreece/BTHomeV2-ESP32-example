@@ -69,11 +69,14 @@ void setBeacon() {
   payload += presence; // This is the presence binary sensor object id: 0x25
   payload += yes; // yes: on (0x01) -- no: off (0x00)
   
-  // Example Count packet
-  payload += count; // Count Sensor paket
-  payload +=  intToLittleEndian(bootcount, 1); // Example value for count sensor. The bootcount variable is converted to little indian
+  // Example Temperature packet
+  payload += temperature; // Temperature Sensor paket
+  int state = 2587;       // The temperature that should be parsed this is 25,87°C
+  int byteNum = 2;        // The number of bytes from https://bthome.io/format/ for the device id
+  payload += intToLittleEndianHexString(state, byteNum);
   
-  byte payload_buf = payload.length() + 1;
+
+  byte payload_buf = payload.length() + 1; // Generate the length of the Service paket
   strServiceData2 += payload_buf;
   strServiceData2 += payload;
   
@@ -91,12 +94,13 @@ void setBeacon() {
 
 }
 
-byte intToLittleEndian(int value, int len) {
-  byte buff[len];
-  for (int i = 0; i < len; i++) {
-    buff[i] = (value >> (i * 8)) & 0xFF;
+std::string intToLittleEndianHexString(int value, int numBytes) {
+  std::string hexString = "";
+  for (int i = 0; i < numBytes; i++) {
+    byte byteValue = static_cast<byte>((value >> (8 * i)) & 0xFF);
+    hexString += byteValue;
   }
-  return *buff;
+  return hexString;
 }
 
 std::string intToBytes(int value) {
