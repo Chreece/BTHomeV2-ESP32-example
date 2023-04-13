@@ -5,12 +5,16 @@
    Modified for V2 by Chreece -- Encryption not yet implemented
    BLE advertisement format from https://bthome.io/
 */
-
 #include "NimBLEDevice.h"
 #include "esp_sleep.h"
-#include "esp_bt_main.h"
-#include "esp_bt_device.h"
 #include "BTHome.h"
+
+#define ENCRYPTION false          // Encryption for the messages, should stay false as encryption is not yet implemented on this code (still in development)
+#define DEVICE_NAME "DIY-Sensor"  // The name of the sensor
+
+#if ENCRYPTION
+  #include <AESLib.h>
+#endif
 
 #define GPIO_DEEP_SLEEP_DURATION     10  // sleep x seconds and then wake up
 RTC_DATA_ATTR static uint32_t bootcount; // remember number of boots in RTC Memory
@@ -24,9 +28,11 @@ extern "C" {
 }
 #endif
 
+
+
 BLEAdvertising *pAdvertising;
 
-void setBeacon() {
+void setBeacon(std::string sensor_data) {
 
   // Create the BLE Device
 
@@ -37,48 +43,37 @@ void setBeacon() {
   std::string strServiceData = "";
   std::string strServiceData2 = "";
   std::string payload = "";
-  
-  String device_name = "DIY-sensor";      // The device name
-  bool encryption = false;               // Encryption for the messages, should stay false as encryption is not yet implemented on this code (still in develepment)
-  
+  String device_name = DEVICE_NAME;
   int dn_length = device_name.length() + 1;
   byte len_buf = dn_length;
   char str_buf[dn_length];
   device_name.toCharArray(str_buf, dn_length);
 
-  strServiceData += len_buf;
+  strServiceData += len_buf;         // Add the length of the Name
   strServiceData += Complete_Name;   // Complete_Name: Complete local name -- Short_Name: Shortened Name
-  strServiceData += str_buf;
+  strServiceData += str_buf;         // Add the Name to the payload
 
   payload += Service_Data;  // DO NOT CHANGE -- Service Data - 16-bit UUID
 
   payload += UUID1;  // DO NOT CHANGE -- UUID
   payload += UUID2;  // DO NOT CHANGE -- UUID
 
-  if (encryption){
+  
+  // The encryption is not yet implemented
+  if (ENCRYPTION){        
     payload += Encrypt;
     std::string enkey = "d4d539a12211baadacac82be74c6f902";    // The encryption Key    
-    std::string counter = intToBytes(bootcount);    
-    const uint8_t* mac = esp_bt_dev_get_address();
+    std::string counter = intToBytes(bootcount);
+    BLEAddress esp32Mac;  
+    esp32Mac = NimBLEDevice::getAddress();
     } else {
       payload += No_Encrypt;
-    }  
+    }
 
-  //  This section is for the sensors' entities and values see https://bthome.io/format/ you can use the variables defined in BThome.h
-  // Example Presence packet
-  payload += presence; // This is the presence binary sensor object id: 0x25
-  payload += yes; // yes: on (0x01) -- no: off (0x00)
-  
-  // Example Temperature packet
-  payload += temperature; // Temperature Sensor paket
-  int state = 2587;       // The temperature that should be parsed this is 25,87°C
-  int byteNum = 2;        // The number of bytes from https://bthome.io/format/ for the device id
-  payload += intToLittleEndianHexString(state, byteNum);
-  
-
-  byte payload_buf = payload.length() + 1; // Generate the length of the Service paket
-  strServiceData2 += payload_buf;
-  strServiceData2 += payload;
+  payload += sensor_data;                  // Add the sensor entities and states to the payload
+  byte payload_buf = payload.length() + 1; // Generate the length of the Service Data
+  strServiceData2 += payload_buf;         // Add the length to the Service Data
+  strServiceData2 += payload;             // Add the sensor data to the Service Data
   
   oAdvertisementData.addData(strServiceData);
   oAdvertisementData.addData(strServiceData2);
@@ -122,13 +117,32 @@ void setup() {
 
   BLEDevice::init("");
   
-  bootcount++;;
+  bootcount++;
   
   Serial.printf("start ESP32 %d\n", bootcount);
 
   pAdvertising = BLEDevice::getAdvertising();
   
-  setBeacon();
+  std::string pload = "";
+
+  //  This section is for the sensors' entities and states see https://bthome.io/format/ you can use the variables defined in BThome.h
+  // Example Presence packet
+  pload += presence;  // This is the presence binary sensor, object id: 0x25
+  pload += yes;       // yes: on (0x01) -- no: off (0x00)
+  
+  // Example Temperature packet
+  pload += temperature; // Temperature Sensor Object Id: 0x02 
+  int state = 2587;     // This will be 25.87°C since this object id has a multiplier of 0.01
+  int byteNum = 2;      // 2 bytes
+  pload += intToLittleEndianHexString(state, byteNum); // Convert it to little endian hex
+  
+  // Example Battery packet
+  pload += battery;     // Battery Sensor Object Id: 0x01
+  state = 37;           // This will be 37% (multiplier 1)
+  byteNum = 1;          // 0x01 object id is one byte long
+  pload += intToLittleEndianHexString(state, byteNum); // Convert it to little endian hex
+
+  setBeacon(pload);
 
   // Start advertising
   pAdvertising->start();
