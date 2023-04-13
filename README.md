@@ -3,7 +3,7 @@ An example BTHome v2 example with a presence and a count sensor
 
 # Notice it's curently under development it doesn't work for more than 1 byte number states
 
-This is an example for a DIY BTHome v2 sensor.
+This is an example for a DIY [BTHome v2](https://bthome.io/) sensor.
 
 The original code is from: https://github.com/TheDigital1/ESP32_BTHome
 
