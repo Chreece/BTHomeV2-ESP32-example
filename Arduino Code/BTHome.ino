@@ -50,12 +50,12 @@ void setup() {
   state[1] = 5055;     // This will be 50.55%  since this object id has a multiplier of 0.01
   
   // Example Battery packet
-  object_id[2] = BATTERY; // Temperature Sensor Object Id: 0x01
+  object_id[2] = BATTERY; // Battery Sensor Object Id: 0x01
   state[2] = 100;     // This will be 28%  since this object id has a multiplier of 1
   
   // Example Binary Occupancy packet
-  object_id[3] = OCCUPANCY; // Temperature Sensor Object Id: 0x01
-  state[3] = ON;     // This will be 28%  since this object id has a multiplier of 1
+  object_id[3] = OCCUPANCY; // Binary Occupancy Sensor Object Id: 0x23
+  state[3] = ON;     // This is 0x01 meaning on
   
   bthome.sendPaket(SENSOR_NUM, object_id, state, DEVICE_NAME, ENCRYPTION);
 
