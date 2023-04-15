@@ -1,4 +1,4 @@
-# BTHomeV2-ESP32-example
+# BTHomeV2 ESP32 Example
 # V2 of the example, simplified for least input
 An example BTHome v2 example with a presence and a count sensor
 
