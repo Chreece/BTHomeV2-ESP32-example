@@ -20,7 +20,7 @@ Sending entities to Home Assistant is simplified.
 
 4) Change the SENSOR_NUM with the number of the entities to send
 
-5) Add the object id of the individual sensors and the state of it as in the examples
+5) Add the object id of the individual entities and the state of it as in the examples
 
 6) Compile and upload to ESP32
 
