@@ -43,7 +43,7 @@ void setup() {
 
   // Example Temperature packet
   object_id[0] = TEMPERATURE; // Temperature Sensor Object Id: 0x02 see BTHome.h defined variables
-  state[0] = -2587;     // This will be 25.87°C  since this object id has a multiplier of 0.01
+  state[0] = -2587;     // This will be -25.87°C  since this object id has a multiplier of 0.01
   
   // Example Humidity packet
   object_id[1] = HUMIDITY2; // Himidity Sensor Object Id: 0x03
