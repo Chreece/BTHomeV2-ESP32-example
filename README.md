@@ -1,4 +1,5 @@
 # BTHomeV2-ESP32-example
+# V2 of the example, simplified for least input
 An example BTHome v2 example with a presence and a count sensor
 
 # Notice it's currently under development
@@ -9,12 +10,23 @@ The original code is from: https://github.com/TheDigital1/ESP32_BTHome
 
 The header file contains human readable variables for the hex Object ids.
 
-Note: yes = true (0x01), no = false (0x00) for the binary sensors.
+Sending entities to Home Assistant is simplified.
 
-For number states there is the `intToLittleEndianHexString` method to use like in the temperature example.
+1) Download the files from Arduino Code folder.
 
-The length for the messages is automatically generated.
+2) Edit the BTHome.ino in your favourite Arduino IDE 
 
-Read the comments in the code for more info on what can be changed and for the object ids consider using the variables from BTHome.h instead.
+3) Change the DEVICE_NAME to the one that should be recognised in BTHome integration
+
+4) Change the SENSOR_NUM with the number of the entities to send
+
+5) Add the object id of the individual sensors and the state of it as in the examples
+
+6) Compile and upload to ESP32
+
+DONE!
+
+Read the comments in the code for more info. 
+For the object ids consider using the variables from BTHome.h instead.
 
 Unfortunately the encryption documentation is not clear to me and can't yet implement it.
