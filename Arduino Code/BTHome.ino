@@ -19,15 +19,6 @@
 
 #define GPIO_DEEP_SLEEP_DURATION     10  // sleep x seconds and then wake up
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-#ifdef __cplusplus
-}
-#endif
-
 BTHome bthome;
 
 void setup() {
@@ -38,7 +29,8 @@ void setup() {
   Serial.begin(115200);
   
   // Example sensor paket:
-  // object_id[x] = <object id> // x= The position of table to save the value starting from 0. The object_id from the sensor from https://bthome.io/format/ or alternative use the variables from BTHome.h
+  // object_id[x] = <object id> // x = The position of table to save the value starting from 0. 
+                                // The < object_id > from the sensor from https://bthome.io/format/ or alternative use the variables from BTHome.h
   // state = <sensors' state>   // The state of the sensor. You can use ON or OFF for the binary sensors or a numerical state with the multiplier from table
 
   // Example Temperature packet
@@ -46,7 +38,7 @@ void setup() {
   state[0] = -2587;     // This will be -25.87°C  since this object id has a multiplier of 0.01
   
   // Example Humidity packet
-  object_id[1] = HUMIDITY2; // Himidity Sensor Object Id: 0x03
+  object_id[1] = HUMIDITY2; // Humidity Sensor Object Id: 0x03
   state[1] = 5055;     // This will be 50.55%  since this object id has a multiplier of 0.01
   
   // Example Battery packet
