@@ -18,11 +18,9 @@ Sending entities to Home Assistant is simplified.
 
 3) Change the DEVICE_NAME to the one that should be recognised in BTHome integration
 
-4) Change the SENSOR_NUM with the number of the entities to send
+4) Add the object id of the individual entities and the state of it as in the examples
 
-5) Add the object id of the individual entities and the state of it as in the examples
-
-6) Compile and upload to ESP32
+5) Compile and upload to ESP32
 
 DONE!
 
