@@ -80,13 +80,27 @@ void BTHome::buildPaket(String device_name) {
   payloadData += FLAG2;
   payloadData += FLAG3;
   //local name
-  int dn_length = device_name.length() + 1;
-  byte len_buf = dn_length;
-  char str_buf[dn_length];
-  device_name.toCharArray(str_buf, dn_length);
-  payloadData += len_buf;         // Add the length of the Name
-  payloadData += COMPLETE_NAME;   // Complete_Name: Complete local name -- Short_Name: Shortened Name
-  payloadData += str_buf;         // Add the Name to the payload
+  if (!device_name.isEmpty()) {
+    int dn_length = device_name.length() + 1;
+    if (this->m_encryptEnable) {
+      //deal with the device name to make sure the adv length <= 31
+      //18=3(FLAG)+1(device name length bit)+1(COMPLETE_NAME)+1(SERVICE_DATA)+2(UUID)+1(ENCRYPT)+4(nonce)+4(mic)+1(serviceData length bit)
+      if (dn_length > BLE_ADVERT_MAX_LEN - this->m_sensorDataIdx - 18)
+        dn_length = BLE_ADVERT_MAX_LEN - this->m_sensorDataIdx - 18;
+    }
+    else {
+      //10=3(FLAG)+1(device name length bit)+1(COMPLETE_NAME)+1(SERVICE_DATA)+2(UUID)+1(ENCRYPT)+1(serviceData length bit)
+      if (dn_length > BLE_ADVERT_MAX_LEN - this->m_sensorDataIdx - 10)
+        dn_length = BLE_ADVERT_MAX_LEN - this->m_sensorDataIdx - 10;
+    }
+    byte len_buf = dn_length;
+    char str_buf[dn_length];
+    //chop the device name if needed
+    device_name.substring(0, dn_length - 1).toCharArray(str_buf, dn_length);
+    payloadData += len_buf;         // Add the length of the Name
+    payloadData += COMPLETE_NAME;   // Complete_Name: Complete local name -- Short_Name: Shortened Name
+    payloadData += str_buf;         // Add the Name to the payload
+  }
 
   serviceData += SERVICE_DATA;  // DO NOT CHANGE -- Service Data - 16-bit UUID
   serviceData += UUID1;  // DO NOT CHANGE -- UUID
