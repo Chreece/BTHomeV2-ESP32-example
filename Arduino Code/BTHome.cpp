@@ -2,31 +2,32 @@
 #include "NimBLEDevice.h"
 #include "BTHome.h"
 
-#include "esp_random.h"
-//#include "mbedtls/ccm.h"
 
 static BLEAdvertising *pAdvertising;
 
-void BTHome::begin(bool encryption, String enkey) {
+void BTHome::begin(bool encryption, uint8_t const* const key) {
   BLEDevice::init("");
   pAdvertising = BLEDevice::getAdvertising();
   if (encryption) {
     this->m_encryptEnable = true;
     this->m_encryptCount = esp_random() % 0x427;
+    memcpy(bindKey, key, sizeof(uint8_t) * BIND_KEY_LEN);
+    mbedtls_ccm_init(&this->m_encryptCTX);
+    mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
   }
   else this->m_encryptEnable = false;
 }
 
 void BTHome::resetMeasurement() {
-  this->m_payloadIdx = 0;
+  this->m_sensorDataIdx = 0;
 }
 
 bool BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state) {
-  if ((this->m_payloadIdx + 2) <= MEASUREMENT_MAX_LEN) {
-    this->m_payload[this->m_payloadIdx] = static_cast<byte>(sensor_id & 0xff);
-    this->m_payloadIdx++;
-    this->m_payload[this->m_payloadIdx] = static_cast<byte>(state & 0xff);
-    this->m_payloadIdx++;
+  if ((this->m_sensorDataIdx + 2) <= MEASUREMENT_MAX_LEN) {
+    this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
+    this->m_sensorDataIdx++;
+    this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(state & 0xff);
+    this->m_sensorDataIdx++;
     return true;
   }
   return false;
@@ -35,13 +36,13 @@ bool BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state) {
 bool BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
   uint8_t size = getByteNumber(sensor_id);
   uint16_t factor = getFactor(sensor_id);
-  if ((this->m_payloadIdx + size + 1) <= MEASUREMENT_MAX_LEN) {
-    this->m_payload[this->m_payloadIdx] = static_cast<byte>(sensor_id & 0xff);
-    this->m_payloadIdx++;
+  if ((this->m_sensorDataIdx + size + 1) <= MEASUREMENT_MAX_LEN) {
+    this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
+    this->m_sensorDataIdx++;
     for (uint8_t i = 0; i < size; i++)
     {
-      this->m_payload[this->m_payloadIdx] = static_cast<byte>(((value * factor) >> (8 * i)) & 0xff);
-      this->m_payloadIdx++;
+      this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(((value * factor) >> (8 * i)) & 0xff);
+      this->m_sensorDataIdx++;
     }
     return true;
   }
@@ -51,14 +52,14 @@ bool BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
 bool BTHome::addMeasurement(uint8_t sensor_id, float value) {
   uint8_t size = getByteNumber(sensor_id);
   uint16_t factor = getFactor(sensor_id);
-  if ((this->m_payloadIdx + size + 1) <= MEASUREMENT_MAX_LEN) {
+  if ((this->m_sensorDataIdx + size + 1) <= MEASUREMENT_MAX_LEN) {
     uint64_t value2 = static_cast<uint64_t>(value * factor);
-    this->m_payload[this->m_payloadIdx] = static_cast<byte>(sensor_id & 0xff);
-    this->m_payloadIdx++;
+    this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
+    this->m_sensorDataIdx++;
     for (uint8_t i = 0; i < size; i++)
     {
-      this->m_payload[this->m_payloadIdx] = static_cast<byte>((value2 >> (8 * i)) & 0xff);
-      this->m_payloadIdx++;
+      this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>((value2 >> (8 * i)) & 0xff);
+      this->m_sensorDataIdx++;
     }
     return true;
   }
@@ -77,7 +78,7 @@ void BTHome::buildPaket(String device_name) {
   std::string strServiceData = "";
   std::string strServiceData2 = "";
   std::string serviceData = "";
-  std::string bthomedata = "";
+  int i;
 
   int dn_length = device_name.length() + 1;
   byte len_buf = dn_length;
@@ -93,22 +94,46 @@ void BTHome::buildPaket(String device_name) {
   serviceData += UUID1;  // DO NOT CHANGE -- UUID
   serviceData += UUID2;  // DO NOT CHANGE -- UUID
 
-  // Build the BTHome Data
-  for (int i = 0; i < this->m_payloadIdx; i++)
-  {
-    bthomedata += this->m_payload[i]; // Add the sensor data to the Service Data
-  }
-
   // The encryption
   if (this->m_encryptEnable) {
     serviceData += ENCRYPT;
-    std::string counter = intToFourBytes(this->m_encryptCount);
-    BLEAddress esp32Mac;
-    esp32Mac = NimBLEDevice::getAddress();
+
+    uint8_t ciphertext[BLE_ADVERT_MAX_LEN];
+    uint8_t encryptionTag[BLE_ADVERT_MAX_LEN];
+    //buildNonce
+    uint8_t nonce[NONCE_LEN];
+    uint8_t* countPtr  = (uint8_t*)(&this->m_encryptCount);
+    esp_read_mac(&nonce[0], ESP_MAC_BT);
+    nonce[6] = UUID1;
+    nonce[7] = UUID2;
+    nonce[8] = ENCRYPT;
+    memcpy(&nonce[9], countPtr, 4);
+    //encrypt sensorData
+    mbedtls_ccm_encrypt_and_tag(&this->m_encryptCTX, this->m_sensorDataIdx, nonce, NONCE_LEN, 0, 0,
+                                &this->m_sensorData[0], &ciphertext[0], encryptionTag,
+                                MIC_LEN);
+    for (i = 0; i < this->m_sensorDataIdx; i++)
+    {
+      serviceData += ciphertext[i];
+    }
+    //writeCounter
+    serviceData += nonce[9];
+    serviceData += nonce[10];
+    serviceData += nonce[11];
+    serviceData += nonce[12];
     this->m_encryptCount++;
+    //writeMIC
+    serviceData += encryptionTag[0];
+    serviceData += encryptionTag[1];
+    serviceData += encryptionTag[2];
+    serviceData += encryptionTag[3];
   } else {
     serviceData += NO_ENCRYPT;
-    serviceData += bthomedata;
+    
+    for (i = 0; i < this->m_sensorDataIdx; i++)
+    {
+      serviceData += this->m_sensorData[i]; // Add the sensor data to the Service Data
+    }
   }
 
   byte payload_buf = serviceData.length(); // Generate the length of the Service Data
@@ -139,20 +164,6 @@ void BTHome::start(uint32_t duration) {
 
 bool BTHome::isAdvertising() {
   return pAdvertising->isAdvertising();
-}
-
-
-std::string BTHome::intToFourBytes(uint32_t value) {
-  // Create a buffer to hold the 4 bytes
-  uint8_t buffer[4];
-
-  // Copy the integer value into the buffer
-  memcpy(buffer, &value, sizeof(value));
-
-  // Create a std::string from the buffer
-  std::string result(reinterpret_cast<char*>(buffer), sizeof(buffer));
-
-  return result;
 }
 
 uint8_t BTHome::getByteNumber(uint8_t sens) {

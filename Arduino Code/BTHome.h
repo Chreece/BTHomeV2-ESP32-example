@@ -1,7 +1,12 @@
+#include "esp_mac.h"
+#include "esp_random.h"
+#include "mbedtls/ccm.h"
+
 #define BLE_ADVERT_MAX_LEN 31
 #define MEASUREMENT_MAX_LEN 8
 #define BIND_KEY_LEN 16
 #define NONCE_LEN 13
+#define MIC_LEN 4
 
 #define FLAGS 0x020106
 #define UUID1 0xD2
@@ -99,7 +104,7 @@
 
 class BTHome {
   public:
-    void begin(bool encryption = false, String enkey = "");
+    void begin(bool encryption = false, uint8_t const* const key = NULL);
     void buildPaket(String device_name);
     void start(uint32_t duration = 0);
     void stop();
@@ -112,9 +117,10 @@ class BTHome {
   private:
     uint8_t getByteNumber(uint8_t sens);
     uint16_t getFactor(uint8_t sens);
-    std::string intToFourBytes(uint32_t value);
-    uint32_t m_payloadIdx;
-    byte m_payload[MEASUREMENT_MAX_LEN] = {0};
+    uint8_t m_sensorDataIdx;
+    byte m_sensorData[MEASUREMENT_MAX_LEN] = {0};
     bool m_encryptEnable;
     uint32_t m_encryptCount;
+    mbedtls_ccm_context m_encryptCTX;
+    uint8_t bindKey[BIND_KEY_LEN];
 };
