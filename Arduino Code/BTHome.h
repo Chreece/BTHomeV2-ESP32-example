@@ -8,7 +8,9 @@
 #define NONCE_LEN 13
 #define MIC_LEN 4
 
-#define FLAGS 0x020106
+#define FLAG1 0x02
+#define FLAG2 0x01
+#define FLAG3 0x06
 #define UUID1 0xD2
 #define UUID2 0xFC
 #define SERVICE_DATA 0x16
