@@ -2,7 +2,6 @@
 #include "NimBLEDevice.h"
 #include "BTHome.h"
 
-
 static BLEAdvertising *pAdvertising;
 
 void BTHome::begin(bool encryption, uint8_t const* const key) {
@@ -69,37 +68,35 @@ bool BTHome::addMeasurement(uint8_t sensor_id, float value) {
 void BTHome::buildPaket(String device_name) {
 
   // Create the BLE Device
-
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   //BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
 
-  oAdvertisementData.setFlags(FLAGS);
-
-  std::string strServiceData = "";
-  std::string strServiceData2 = "";
+  std::string payloadData = "";
   std::string serviceData = "";
   int i;
 
+  //head
+  payloadData += FLAG1;
+  payloadData += FLAG2;
+  payloadData += FLAG3;
+  //local name
   int dn_length = device_name.length() + 1;
   byte len_buf = dn_length;
   char str_buf[dn_length];
   device_name.toCharArray(str_buf, dn_length);
-
-  strServiceData += len_buf;         // Add the length of the Name
-  strServiceData += COMPLETE_NAME;   // Complete_Name: Complete local name -- Short_Name: Shortened Name
-  strServiceData += str_buf;         // Add the Name to the payload
+  payloadData += len_buf;         // Add the length of the Name
+  payloadData += COMPLETE_NAME;   // Complete_Name: Complete local name -- Short_Name: Shortened Name
+  payloadData += str_buf;         // Add the Name to the payload
 
   serviceData += SERVICE_DATA;  // DO NOT CHANGE -- Service Data - 16-bit UUID
-
   serviceData += UUID1;  // DO NOT CHANGE -- UUID
   serviceData += UUID2;  // DO NOT CHANGE -- UUID
-
   // The encryption
   if (this->m_encryptEnable) {
     serviceData += ENCRYPT;
 
     uint8_t ciphertext[BLE_ADVERT_MAX_LEN];
-    uint8_t encryptionTag[BLE_ADVERT_MAX_LEN];
+    uint8_t encryptionTag[MIC_LEN];
     //buildNonce
     uint8_t nonce[NONCE_LEN];
     uint8_t* countPtr  = (uint8_t*)(&this->m_encryptCount);
@@ -127,21 +124,20 @@ void BTHome::buildPaket(String device_name) {
     serviceData += encryptionTag[1];
     serviceData += encryptionTag[2];
     serviceData += encryptionTag[3];
-  } else {
+  }
+  else {
     serviceData += NO_ENCRYPT;
-    
     for (i = 0; i < this->m_sensorDataIdx; i++)
     {
       serviceData += this->m_sensorData[i]; // Add the sensor data to the Service Data
     }
   }
 
-  byte payload_buf = serviceData.length(); // Generate the length of the Service Data
-  strServiceData2 += payload_buf;         // Add the length to the Service Data
-  strServiceData2 += serviceData;             // Finalize the packet
+  byte sd_length = serviceData.length(); // Generate the length of the Service Data
+  payloadData += sd_length;         // Add the length of the Service Data
+  payloadData += serviceData;             // Finalize the packet
 
-  oAdvertisementData.addData(strServiceData);
-  oAdvertisementData.addData(strServiceData2);
+  oAdvertisementData.addData(payloadData);
   pAdvertising->setAdvertisementData(oAdvertisementData);
   //pAdvertising->setScanResponseData(oScanResponseData);
   pAdvertising->setScanResponse(false);
