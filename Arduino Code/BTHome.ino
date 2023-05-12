@@ -36,58 +36,58 @@ void loop() {
   bthome.addMeasurement(ID_ILLUMINANCE, 123.02f);
   bthome.buildPaket(DEVICE_NAME);
   bthome.start();  //start the first adv data
-  sleep(1500);
+  delay(1500);
 
   bthome.resetMeasurement();
   bthome.addMeasurement(ID_PRESSURE, 1001.86f);
   bthome.buildPaket(DEVICE_NAME);//change the adv data
-  sleep(1500);
+  delay(1500);
 
 
   bthome.resetMeasurement();
   bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);
   bthome.buildPaket(DEVICE_NAME);//change the adv data
-  sleep(1500);
-
+  delay(1500);
+   
   bthome.resetMeasurement();
   bthome.addMeasurement(ID_HUMIDITY_PRECISE, 50.00f);
   bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  sleep(1500);
+  delay(1500);
 
   bthome.resetMeasurement();
   bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);
   bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  sleep(1500);
+  delay(1500);
 
   bthome.resetMeasurement();
   bthome.addMeasurement(ID_TVOC, (uint64_t)250);
   bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  sleep(1500);
+  delay(1500);
 
   bthome.resetMeasurement();
   bthome.addMeasurement(ID_CO2, (uint64_t)800);
   bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  sleep(1500);
+  delay(1500);
 #else
   bthome.resetMeasurement();
   bthome.addMeasurement(ID_ILLUMINANCE, 123.02f);
   bthome.addMeasurement(ID_PRESSURE, 1001.86f);
   bthome.buildPaket(DEVICE_NAME);
   bthome.start();  //start the first adv data
-  sleep(1500);
+  delay(1500);
 
   bthome.resetMeasurement();
   bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);
   bthome.addMeasurement(ID_HUMIDITY_PRECISE, 50.00f);
   bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  sleep(1500);
+  delay(1500);
 
   bthome.resetMeasurement();
   bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);
   bthome.addMeasurement(ID_TVOC, (uint64_t)250);
   bthome.addMeasurement(ID_CO2, (uint64_t)800);
   bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  sleep(1500);
+  delay(1500);
 #endif
 
   bthome.stop();
