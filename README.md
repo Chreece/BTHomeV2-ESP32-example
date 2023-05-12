@@ -1,7 +1,7 @@
 # BTHomeV2 ESP32 Example
 # V2 of the example, simplified for least input
 An example BTHome v2 example with a presence and a count sensor
-Thanks @countrysideboy for his contributions on Encryption and cleanup code, the most of the code is from his side!
+Thanks [@countrysideboy](https://github.com/countrysideboy) for his contributions on Encryption and cleanup code, the most of the code is from his side!
 
 # Notice it's currently under development
 
