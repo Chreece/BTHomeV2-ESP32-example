@@ -26,5 +26,3 @@ DONE!
 
 Read the comments in the code for more info. 
 For the object ids consider using the variables from BTHome.h instead.
-
-Unfortunately the encryption documentation is not clear to me and can't yet implement it.
