@@ -28,6 +28,7 @@ void setup() {
 void loop() {
   //MEASUREMENT_MAX_LEN = 23, ENABLE_ENCRYPT will use extra 8 bytes, so each Measurement should smaller than 15
   bthome.resetMeasurement();
+  // bthome.addMeasurement(sensorid, value) you can use the sensorids from the BTHome.h file
   bthome.addMeasurement(ID_ILLUMINANCE, 1000.02f);//4 bytes
   bthome.addMeasurement(ID_PRESSURE, 101.86f);//4
   bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 54.00f);//3
