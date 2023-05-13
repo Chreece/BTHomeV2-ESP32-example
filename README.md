@@ -25,5 +25,8 @@ Sending entities to Home Assistant is simplified.
 
 DONE!
 
+# Encryption is enabled on default, can be disabled by removing the `#define ENABLE_ENCRYPT` line
+# Default encryption key (Bind_Key): 231d39c1d7cc1ab1aee224cd096db932 (Please change it for secutity reasons - Should be a 32 digit hex)
+
 Read the comments in the code for more info. 
 For the object ids consider using the variables from BTHome.h instead.
