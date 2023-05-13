@@ -3,14 +3,16 @@
 #include "mbedtls/ccm.h"
 
 #define BLE_ADVERT_MAX_LEN 31
-#define MEASUREMENT_MAX_LEN 8
+#define MEASUREMENT_MAX_LEN 23 //23=31(BLE_ADVERT_MAX_LEN)-3(FLAG)-1(SERVICE_DATA)-2(UUID)-1(ENCRYPT)-1(serviceData length bit)
 #define BIND_KEY_LEN 16
 #define NONCE_LEN 13
 #define MIC_LEN 4
 
+#define FLAG 0x020106
 #define FLAG1 0x02
 #define FLAG2 0x01
 #define FLAG3 0x06
+#define UUID 0xD2FC
 #define UUID1 0xD2
 #define UUID2 0xFC
 #define SERVICE_DATA 0x16
@@ -21,6 +23,7 @@
 #define SHORT_NAME 0x08
 #define COMPLETE_NAME 0x09
 
+#define ID_PACKET 0x00
 #define ID_BATTERY 0x01
 #define ID_CO2 0x12
 #define ID_COUNT 0x09
@@ -107,7 +110,7 @@
 class BTHome {
   public:
     void begin(bool encryption = false, uint8_t const* const key = NULL);
-    void buildPaket(String device_name);
+    void buildPaket(String device_name = "");
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();
