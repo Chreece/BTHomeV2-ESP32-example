@@ -110,7 +110,7 @@
 class BTHome {
   public:
     void begin(bool encryption = false, uint8_t const* const key = NULL);
-    void buildPaket(String device_name = "");
+    void buildPaket(String device_name = "DIY-sensor");
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();
