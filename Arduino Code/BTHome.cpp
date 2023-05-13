@@ -4,21 +4,25 @@
 
 static BLEAdvertising *pAdvertising;
 
-void BTHome::begin(bool encryption, String key) {
+void BTHome::begin(bool encryption, uint8_t const* const key) {
   BLEDevice::init("");
   pAdvertising = BLEDevice::getAdvertising();
   if (encryption) {
-    uint8_t bind_key[BIND_KEY_LEN];
-    for (int i = 0; i < BIND_KEY_LEN; i++) {
-      bind_key[i] = strtol(key.substring(i*2, i*2+2).c_str(), NULL, BIND_KEY_LEN);
-    }
     this->m_encryptEnable = true;
     this->m_encryptCount = esp_random() % 0x427;
-    memcpy(bindKey, bind_key, sizeof(uint8_t) * BIND_KEY_LEN);
+    memcpy(bindKey, key, sizeof(uint8_t) * BIND_KEY_LEN);
     mbedtls_ccm_init(&this->m_encryptCTX);
     mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
   }
   else this->m_encryptEnable = false;
+}
+
+void BTHome::begin(bool encryption, String key) {
+  uint8_t bind_key[BIND_KEY_LEN];
+  for (int i = 0; i < BIND_KEY_LEN; i++) {
+    bind_key[i] = strtol(key.substring(i * 2, i * 2 + 2).c_str(), NULL, BIND_KEY_LEN);
+  }
+  begin(encryption, bind_key);
 }
 
 void BTHome::resetMeasurement() {

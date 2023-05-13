@@ -109,6 +109,7 @@
 
 class BTHome {
   public:
+    void begin(bool encryption = false, uint8_t const* const key = NULL);
     void begin(bool encryption = false, String key = "");
     void buildPaket(String device_name = "DIY-sensor");
     void start(uint32_t duration = 0);
