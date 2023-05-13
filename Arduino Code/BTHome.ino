@@ -27,69 +27,23 @@ void setup() {
 }
 
 void loop() {
-#ifdef ENABLE_ENCRYPT
-  /*
-     FIXME: ENABLE_ENCRYPT will add extra data to the adv,which may makes the length longer than 31,
-     so buildPaket with only one measurement data.
-  */
+  //MEASUREMENT_MAX_LEN = 23, ENABLE_ENCRYPT will use extra 8 bytes, so each Measurement should smaller than 15
   bthome.resetMeasurement();
-  bthome.addMeasurement(ID_ILLUMINANCE, 123.02f);
+  bthome.addMeasurement(ID_ILLUMINANCE, 123.02f);//4 bytes
+  bthome.addMeasurement(ID_PRESSURE, 1001.86f);//4
+  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);//3
+  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 50.00f);//3
   bthome.buildPaket(DEVICE_NAME);
   bthome.start();  //start the first adv data
   delay(1500);
 
   bthome.resetMeasurement();
-  bthome.addMeasurement(ID_PRESSURE, 1001.86f);
-  bthome.buildPaket(DEVICE_NAME);//change the adv data
-  delay(1500);
-
-
-  bthome.resetMeasurement();
-  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);
-  bthome.buildPaket(DEVICE_NAME);//change the adv data
-  delay(1500);
-   
-  bthome.resetMeasurement();
-  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 50.00f);
+  bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);//2 bytes
+  bthome.addMeasurement(ID_TVOC, (uint64_t)250);//3
+  bthome.addMeasurement(ID_CO2, (uint64_t)800);//3
   bthome.buildPaket(DEVICE_NAME);  //change the adv data
   delay(1500);
-
-  bthome.resetMeasurement();
-  bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);
-  bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  delay(1500);
-
-  bthome.resetMeasurement();
-  bthome.addMeasurement(ID_TVOC, (uint64_t)250);
-  bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  delay(1500);
-
-  bthome.resetMeasurement();
-  bthome.addMeasurement(ID_CO2, (uint64_t)800);
-  bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  delay(1500);
-#else
-  bthome.resetMeasurement();
-  bthome.addMeasurement(ID_ILLUMINANCE, 123.02f);
-  bthome.addMeasurement(ID_PRESSURE, 1001.86f);
-  bthome.buildPaket(DEVICE_NAME);
-  bthome.start();  //start the first adv data
-  delay(1500);
-
-  bthome.resetMeasurement();
-  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);
-  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 50.00f);
-  bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  delay(1500);
-
-  bthome.resetMeasurement();
-  bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);
-  bthome.addMeasurement(ID_TVOC, (uint64_t)250);
-  bthome.addMeasurement(ID_CO2, (uint64_t)800);
-  bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  delay(1500);
-#endif
 
   bthome.stop();
-  sleep(1000);
+  delay(10000);
 }
