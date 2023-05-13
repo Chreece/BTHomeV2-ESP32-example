@@ -4,13 +4,17 @@
 
 static BLEAdvertising *pAdvertising;
 
-void BTHome::begin(bool encryption, uint8_t const* const key) {
+void BTHome::begin(bool encryption, String key) {
   BLEDevice::init("");
   pAdvertising = BLEDevice::getAdvertising();
   if (encryption) {
+    uint8_t bind_key[BIND_KEY_LEN];
+    for (int i = 0; i < BIND_KEY_LEN; i++) {
+      bind_key[i] = strtol(key.substring(i*2, i*2+2).c_str(), NULL, BIND_KEY_LEN);
+    }
     this->m_encryptEnable = true;
     this->m_encryptCount = esp_random() % 0x427;
-    memcpy(bindKey, key, sizeof(uint8_t) * BIND_KEY_LEN);
+    memcpy(bindKey, bind_key, sizeof(uint8_t) * BIND_KEY_LEN);
     mbedtls_ccm_init(&this->m_encryptCTX);
     mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
   }
@@ -186,32 +190,30 @@ bool BTHome::isAdvertising() {
 }
 
 uint8_t BTHome::getByteNumber(uint8_t sens) {
-  if ( sens == ID_BATTERY
-       || sens == ID_COUNT
-       || sens == ID_HUMIDITY
-       || sens == ID_MOISTURE
-       || sens == ID_UV ) {
-    return 1;
-  } else {
-    if ( sens == ID_DURATION
-         || sens == ID_ENERGY
-         || sens == ID_GAS
-         || sens == ID_ILLUMINANCE
-         || sens == ID_POWER
-         || sens == ID_PRESSURE ) {
-      return 3;
-    } else {
-      if ( sens == ID_COUNT4
-           || sens == ID_ENERGY4
-           || sens == ID_GAS4
-           || sens == ID_VOLUME
-           || sens == ID_WATER ) {
-        return 4;
-      } else {
+  switch (sens) 
+  { 
+    case ID_BATTERY:
+    case ID_COUNT:
+    case ID_HUMIDITY:
+    case ID_MOISTURE:
+    case ID_UV:
+      return 1; break;
+    case ID_DURATION:
+    case ID_ENERGY:
+    case ID_GAS:
+    case ID_ILLUMINANCE:
+    case ID_POWER:
+    case ID_PRESSURE:
+      return 3; break;
+    case ID_COUNT4:
+    case ID_ENERGY4:
+    case ID_GAS4:
+    case ID_VOLUME:
+    case ID_WATER:
+        return 4; break;
+     default:
         return 2;
-      }
-    }
-  }
+   }
 }
 
 uint16_t BTHome::getFactor(uint8_t sens) {
