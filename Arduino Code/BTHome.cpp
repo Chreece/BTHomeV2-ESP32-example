@@ -161,11 +161,8 @@ void BTHome::buildPaket(String device_name) {
     int dn_length = device_name.length() + 1;
     if (dn_length > 28) dn_length = 28;//BLE_ADVERT_MAX_LEN - FLAG = 31 - 3
     oScanResponseData.setName(device_name.substring(0, dn_length - 1).c_str());
-    pAdvertising->setScanResponseData(oScanResponseData);
   }
-  else {
-    oScanResponseData.setName("DIY-sensor");
-  }
+  pAdvertising->setScanResponseData(oScanResponseData);
 
   /**  pAdvertising->setAdvertisementType(ADV_TYPE_NONCONN_IND);
        Advertising mode. Can be one of following constants:
