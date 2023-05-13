@@ -22,7 +22,7 @@ void BTHome::resetMeasurement() {
 }
 
 bool BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state) {
-  if ((this->m_sensorDataIdx + 2) <= MEASUREMENT_MAX_LEN) {
+  if ((this->m_sensorDataIdx + 2) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
     this->m_sensorDataIdx++;
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(state & 0xff);
@@ -35,7 +35,7 @@ bool BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state) {
 bool BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
   uint8_t size = getByteNumber(sensor_id);
   uint16_t factor = getFactor(sensor_id);
-  if ((this->m_sensorDataIdx + size + 1) <= MEASUREMENT_MAX_LEN) {
+  if ((this->m_sensorDataIdx + size + 1) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
     this->m_sensorDataIdx++;
     for (uint8_t i = 0; i < size; i++)
@@ -51,7 +51,7 @@ bool BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
 bool BTHome::addMeasurement(uint8_t sensor_id, float value) {
   uint8_t size = getByteNumber(sensor_id);
   uint16_t factor = getFactor(sensor_id);
-  if ((this->m_sensorDataIdx + size + 1) <= MEASUREMENT_MAX_LEN) {
+  if ((this->m_sensorDataIdx + size + 1) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
     uint64_t value2 = static_cast<uint64_t>(value * factor);
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
     this->m_sensorDataIdx++;
@@ -69,7 +69,7 @@ void BTHome::buildPaket(String device_name) {
 
   // Create the BLE Device
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-  //BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
+  BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
 
   std::string payloadData = "";
   std::string serviceData = "";
@@ -79,8 +79,9 @@ void BTHome::buildPaket(String device_name) {
   payloadData += FLAG1;
   payloadData += FLAG2;
   payloadData += FLAG3;
-  //local name
-  if (!device_name.isEmpty()) {
+  //local name: move to the response packet
+  /*
+    if (!device_name.isEmpty()) {
     int dn_length = device_name.length() + 1;
     if (this->m_encryptEnable) {
       //deal with the device name to make sure the adv length <= 31
@@ -100,7 +101,8 @@ void BTHome::buildPaket(String device_name) {
     payloadData += len_buf;         // Add the length of the Name
     payloadData += COMPLETE_NAME;   // Complete_Name: Complete local name -- Short_Name: Shortened Name
     payloadData += str_buf;         // Add the Name to the payload
-  }
+    }
+  */
 
   serviceData += SERVICE_DATA;  // DO NOT CHANGE -- Service Data - 16-bit UUID
   serviceData += UUID1;  // DO NOT CHANGE -- UUID
@@ -153,8 +155,15 @@ void BTHome::buildPaket(String device_name) {
 
   oAdvertisementData.addData(payloadData);
   pAdvertising->setAdvertisementData(oAdvertisementData);
-  //pAdvertising->setScanResponseData(oScanResponseData);
-  pAdvertising->setScanResponse(false);
+
+  //fill the local name into oScanResponseData
+  if (!device_name.isEmpty()) {
+    int dn_length = device_name.length() + 1;
+    if (dn_length > 28) dn_length = 28;//BLE_ADVERT_MAX_LEN - FLAG = 31 - 3
+    oScanResponseData.setName(device_name.substring(0, dn_length - 1).c_str());
+  }
+  pAdvertising->setScanResponseData(oScanResponseData);
+
   /**  pAdvertising->setAdvertisementType(ADV_TYPE_NONCONN_IND);
        Advertising mode. Can be one of following constants:
      - BLE_GAP_CONN_MODE_NON (non-connectable; 3.C.9.3.2).
