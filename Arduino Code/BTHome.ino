@@ -32,7 +32,7 @@ void loop() {
   // each adv packet sending lasts for 1500ms
   bthome.resetMeasurement();
   // bthome.addMeasurement(sensorid, value) you can use the sensorids from the BTHome.h file
-  // the Object ids of addMeasurement have to be applied in numerical order (from low to high) in your advertisement 
+  // the Object ids of addMeasurement have to be applied in numerical order (from low to high) in your advertisement
   bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 35.00f);//3
   bthome.addMeasurement(ID_HUMIDITY_PRECISE, 40.00f);//3
   bthome.addMeasurement(ID_PRESSURE, 1023.86f);//4
@@ -40,6 +40,8 @@ void loop() {
   bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);//2
   bthome.addMeasurement(ID_CO2, (uint64_t)1208);//3
   bthome.addMeasurement(ID_TVOC, (uint64_t)350);//3
+  bthome.addMeasurement_state(EVENT_BUTTON, EVENT_BUTTON_PRESS);//2 button press
+  bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
   bthome.sendPacket();
   bthome.stop();
 
@@ -52,11 +54,13 @@ void loop() {
   bthome.buildPaket();
   bthome.start();//start the first adv data
   delay(1500);
-  
+
   bthome.resetMeasurement();
   bthome.addMeasurement_state(STATE_POWER_ON, STATE_OFF);//2
   bthome.addMeasurement(ID_CO2, (uint64_t)458);//3
   bthome.addMeasurement(ID_TVOC, (uint64_t)220);//3
+  bthome.addMeasurement_state(EVENT_BUTTON, EVENT_BUTTON_PRESS);//2, button press
+  bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
   bthome.buildPaket();//change the adv data
   delay(1500);
   bthome.stop();
@@ -114,8 +118,8 @@ void loop() {
 #define STATE_WINDOW			0x2D
 #define ID_HUMIDITY				0x2E
 #define ID_MOISTURE				0x2F
-//#define EVENT_BUTTON			0x3A
-//#define EVENT_DIMMER			0x3C
+#define EVENT_BUTTON			0x3A
+#define EVENT_DIMMER			0x3C
 #define ID_COUNT2				0x3D
 #define ID_COUNT4				0x3E
 #define ID_ROTATION				0x3F

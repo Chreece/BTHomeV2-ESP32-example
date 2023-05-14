@@ -35,16 +35,20 @@ void BTHome::resetMeasurement() {
   this->m_sensorDataIdx = 0;
 }
 
-void BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state) {
-  if ((this->m_sensorDataIdx + 2) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
+void BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state, uint8_t steps) {
+  if ((this->m_sensorDataIdx + 2 + (steps > 0 ? 1 : 0)) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
     this->m_sensorDataIdx++;
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(state & 0xff);
     this->m_sensorDataIdx++;
+    if (steps > 0) {
+      this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(steps & 0xff);
+      this->m_sensorDataIdx++;
+    }
   }
   else {
     sendPacket();
-    addMeasurement_state(sensor_id, state);
+    addMeasurement_state(sensor_id, state, steps);
   }
 }
 
