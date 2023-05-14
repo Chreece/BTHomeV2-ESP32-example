@@ -95,36 +95,41 @@
 #define STATE_ON 0x01
 #define STATE_OFF 0x00
 
-#define EVENT_BUTTON 0x3A00
-#define EVENT_BUTTON_PRESS 0x3A01
-#define EVENT_BUTTON_DOUBLE_PRESS 0x3A02
-#define EVENT_BUTTON_TRIPLE_PRESS 0x3A03
-#define EVENT_BUTTON_LONG_PRESS 0x3A04
-#define EVENT_BUTTON_LONG_DOUBLE_PRESS 0x3A05
-#define EVENT_BUTTTON_LONG_TRIPLE_PRESS 0x3A05
+#define EVENT_BUTTON 0x3A
+#define EVENT_BUTTON_NONE 0x00
+#define EVENT_BUTTON_PRESS 0x01
+#define EVENT_BUTTON_DOUBLE_PRESS 0x02
+#define EVENT_BUTTON_TRIPLE_PRESS 0x03
+#define EVENT_BUTTON_LONG_PRESS 0x04
+#define EVENT_BUTTON_LONG_DOUBLE_PRESS 0x05
+#define EVENT_BUTTTON_LONG_TRIPLE_PRESS 0x06
 
-#define EVENT_DIMMER 0x3C00
-#define EVENT_DIMMER_LEFT 0x3C01
-#define EVENT_DIMMER_RIGHT 0x3C01
+#define EVENT_DIMMER 0x3C
+#define EVENT_DIMMER_NONE 0x00
+#define EVENT_DIMMER_LEFT 0x01
+#define EVENT_DIMMER_RIGHT 0x02
 
 class BTHome {
   public:
-    void begin(bool encryption = false, uint8_t const* const key = NULL);
-    void begin(bool encryption = false, String key = "");
-    void buildPaket(String device_name = "DIY-sensor");
+    void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL);
+    void begin(String dname = "DIY-sensor", bool encryption = false, String key = "");
+    void setDeviceName(String dname = "");
+    void buildPaket();
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();
     void resetMeasurement();
-    bool addMeasurement_state(uint8_t sensor_id, uint8_t state);
-    bool addMeasurement(uint8_t sensor_id, uint64_t value);
-    bool addMeasurement(uint8_t sensor_id, float value);
+    void sendPacket(uint32_t delay_ms = 1500);
+    void addMeasurement_state(uint8_t sensor_id, uint8_t state);
+    void addMeasurement(uint8_t sensor_id, uint64_t value);
+    void addMeasurement(uint8_t sensor_id, float value);
 
   private:
     uint8_t getByteNumber(uint8_t sens);
     uint16_t getFactor(uint8_t sens);
     uint8_t m_sensorDataIdx;
     byte m_sensorData[MEASUREMENT_MAX_LEN] = {0};
+    String dev_name;
     bool m_encryptEnable;
     uint32_t m_encryptCount;
     mbedtls_ccm_context m_encryptCTX;
