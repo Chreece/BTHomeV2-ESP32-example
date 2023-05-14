@@ -120,7 +120,7 @@ class BTHome {
     bool isAdvertising();
     void resetMeasurement();
     void sendPacket(uint32_t delay_ms = 1500);
-    void addMeasurement_state(uint8_t sensor_id, uint8_t state);
+    void addMeasurement_state(uint8_t sensor_id, uint8_t state, uint8_t steps = 0);
     void addMeasurement(uint8_t sensor_id, uint64_t value);
     void addMeasurement(uint8_t sensor_id, float value);
 
