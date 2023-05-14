@@ -19,31 +19,45 @@ BTHome bthome;
 void setup() {
   Serial.begin(115200);
 #ifdef ENABLE_ENCRYPT
-  bthome.begin(true, BIND_KEY);
+  bthome.begin(DEVICE_NAME, true, BIND_KEY);
 #else
-  bthome.begin();
+  bthome.begin(DEVICE_NAME);
 #endif
 }
 
 void loop() {
   //MEASUREMENT_MAX_LEN = 23, ENABLE_ENCRYPT will use extra 8 bytes, so each Measurement should smaller than 15
+
+  // 1st method: just addMeasurement as much as you can, the code will split and send the adv packet automatically
+  // each adv packet sending lasts for 1500ms
   bthome.resetMeasurement();
   // bthome.addMeasurement(sensorid, value) you can use the sensorids from the BTHome.h file
-  bthome.addMeasurement(ID_ILLUMINANCE, 1000.02f);//4 bytes
-  bthome.addMeasurement(ID_PRESSURE, 101.86f);//4
-  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 54.00f);//3
-  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 67.00f);//3
-  bthome.buildPaket(DEVICE_NAME);
-  bthome.start();  //start the first adv data
-  delay(1500);
-
-  bthome.resetMeasurement();
-  bthome.addMeasurement_state(STATE_POWER_ON, STATE_OFF);//2 bytes
-  bthome.addMeasurement(ID_TVOC, (uint64_t)213);//3
-  bthome.addMeasurement(ID_CO2, (uint64_t)456);//3
-  bthome.buildPaket(DEVICE_NAME);  //change the adv data
-  delay(1500);
-
+  bthome.addMeasurement(ID_ILLUMINANCE, 50.81f);//4 bytes
+  bthome.addMeasurement(ID_PRESSURE, 1023.86f);//4
+  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 35.00f);//3
+  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 40.00f);//3
+  bthome.addMeasurement(ID_TVOC, (uint64_t)350);//3
+  bthome.addMeasurement(ID_CO2, (uint64_t)1208);//3
+  bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);//2
+  bthome.sendPacket();
   bthome.stop();
+
+  // 2nd method: make sure each measurement data length <=15 and start(stop) manually
+  bthome.resetMeasurement();
+  bthome.addMeasurement(ID_ILLUMINANCE, 1008.81f);//4 bytes
+  bthome.addMeasurement(ID_PRESSURE, 1000.86f);//4
+  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);//3
+  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 70.00f);//3
+  bthome.buildPaket();
+  bthome.start();//start the first adv data
+  delay(1500);
+  bthome.resetMeasurement();
+  bthome.addMeasurement(ID_TVOC, (uint64_t)220);//3
+  bthome.addMeasurement(ID_CO2, (uint64_t)458);//3
+  bthome.addMeasurement_state(STATE_POWER_ON, STATE_OFF);//2
+  bthome.buildPaket();//change the adv data
+  delay(1500);
+  bthome.stop();
+
   delay(10000);
 }

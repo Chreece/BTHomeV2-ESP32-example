@@ -4,9 +4,10 @@
 
 static BLEAdvertising *pAdvertising;
 
-void BTHome::begin(bool encryption, uint8_t const* const key) {
+void BTHome::begin(String dname, bool encryption, uint8_t const* const key) {
   BLEDevice::init("");
   pAdvertising = BLEDevice::getAdvertising();
+  setDeviceName(dname);
   if (encryption) {
     this->m_encryptEnable = true;
     this->m_encryptCount = esp_random() % 0x427;
@@ -17,30 +18,37 @@ void BTHome::begin(bool encryption, uint8_t const* const key) {
   else this->m_encryptEnable = false;
 }
 
-void BTHome::begin(bool encryption, String key) {
+void BTHome::begin(String dname, bool encryption, String key) {
   uint8_t bind_key[BIND_KEY_LEN];
   for (int i = 0; i < BIND_KEY_LEN; i++) {
     bind_key[i] = strtol(key.substring(i * 2, i * 2 + 2).c_str(), NULL, BIND_KEY_LEN);
   }
-  begin(encryption, bind_key);
+  begin(dname, encryption, bind_key);
+}
+
+void BTHome::setDeviceName(String dname) {
+  if (!dname.isEmpty())
+    this->dev_name = dname;
 }
 
 void BTHome::resetMeasurement() {
   this->m_sensorDataIdx = 0;
 }
 
-bool BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state) {
+void BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state) {
   if ((this->m_sensorDataIdx + 2) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
     this->m_sensorDataIdx++;
     this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(state & 0xff);
     this->m_sensorDataIdx++;
-    return true;
   }
-  return false;
+  else {
+    sendPacket();
+    addMeasurement_state(sensor_id, state);
+  }
 }
 
-bool BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
+void BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
   uint8_t size = getByteNumber(sensor_id);
   uint16_t factor = getFactor(sensor_id);
   if ((this->m_sensorDataIdx + size + 1) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
@@ -51,12 +59,14 @@ bool BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(((value * factor) >> (8 * i)) & 0xff);
       this->m_sensorDataIdx++;
     }
-    return true;
   }
-  return false;
+  else {
+    sendPacket();
+    addMeasurement(sensor_id, value);
+  }
 }
 
-bool BTHome::addMeasurement(uint8_t sensor_id, float value) {
+void BTHome::addMeasurement(uint8_t sensor_id, float value) {
   uint8_t size = getByteNumber(sensor_id);
   uint16_t factor = getFactor(sensor_id);
   if ((this->m_sensorDataIdx + size + 1) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
@@ -68,12 +78,14 @@ bool BTHome::addMeasurement(uint8_t sensor_id, float value) {
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>((value2 >> (8 * i)) & 0xff);
       this->m_sensorDataIdx++;
     }
-    return true;
   }
-  return false;
+  else {
+    sendPacket();
+    addMeasurement(sensor_id, value);
+  }
 }
 
-void BTHome::buildPaket(String device_name) {
+void BTHome::buildPaket() {
 
   // Create the BLE Device
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
@@ -165,10 +177,10 @@ void BTHome::buildPaket(String device_name) {
   pAdvertising->setAdvertisementData(oAdvertisementData);
 
   //fill the local name into oScanResponseData
-  if (!device_name.isEmpty()) {
-    int dn_length = device_name.length() + 1;
+  if (!this->dev_name.isEmpty()) {
+    int dn_length = this->dev_name.length() + 1;
     if (dn_length > 28) dn_length = 28;//BLE_ADVERT_MAX_LEN - FLAG = 31 - 3
-    oScanResponseData.setName(device_name.substring(0, dn_length - 1).c_str());
+    oScanResponseData.setName(this->dev_name.substring(0, dn_length - 1).c_str());
   }
   pAdvertising->setScanResponseData(oScanResponseData);
 
@@ -193,9 +205,19 @@ bool BTHome::isAdvertising() {
   return pAdvertising->isAdvertising();
 }
 
+void BTHome::sendPacket(uint32_t delay_ms)
+{
+  if (this->m_sensorDataIdx > 0) {
+    buildPaket();
+    if (!isAdvertising()) start();
+    delay(delay_ms);
+    resetMeasurement();
+  }
+}
+
 uint8_t BTHome::getByteNumber(uint8_t sens) {
-  switch (sens) 
-  { 
+  switch (sens)
+  {
     case ID_BATTERY:
     case ID_COUNT:
     case ID_HUMIDITY:
@@ -214,10 +236,10 @@ uint8_t BTHome::getByteNumber(uint8_t sens) {
     case ID_GAS4:
     case ID_VOLUME:
     case ID_WATER:
-        return 4; break;
-     default:
-        return 2;
-   }
+      return 4; break;
+    default:
+      return 2;
+  }
 }
 
 uint16_t BTHome::getFactor(uint8_t sens) {
