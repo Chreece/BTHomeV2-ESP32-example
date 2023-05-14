@@ -2,10 +2,10 @@
    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
    Ported to Arduino ESP32 by pcbreflux
    Modified to work with NimBLE
-   Modified for V2 by Chreece -- Encryption not yet implemented
+   Modified for V2 by Chreece
+   Modified by countrysideboy: Code cleanups, Chop Data, Encryption
    BLE advertisement format from https://bthome.io/
 
-   Modify by countrysideboy: add the ability to send more sensor data
 */
 
 #include "BTHome.h"
