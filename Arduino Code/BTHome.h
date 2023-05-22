@@ -114,7 +114,7 @@ class BTHome {
     void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL);
     void begin(String dname = "DIY-sensor", bool encryption = false, String key = "");
     void setDeviceName(String dname = "");
-    void buildPaket(bool m_sortEnable = true);
+    void buildPaket();
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();
@@ -135,4 +135,6 @@ class BTHome {
     uint32_t m_encryptCount;
     mbedtls_ccm_context m_encryptCTX;
     uint8_t bindKey[BIND_KEY_LEN];
+    bool m_sortEnable;
+    byte last_object_id;
 };
