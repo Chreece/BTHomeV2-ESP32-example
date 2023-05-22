@@ -16,6 +16,7 @@ void BTHome::begin(String dname, bool encryption, uint8_t const* const key) {
     mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
   }
   else this->m_encryptEnable = false;
+  resetMeasurement();
 }
 
 void BTHome::begin(String dname, bool encryption, String key) {
@@ -33,6 +34,8 @@ void BTHome::setDeviceName(String dname) {
 
 void BTHome::resetMeasurement() {
   this->m_sensorDataIdx = 0;
+  this->last_object_id = 0;
+  this->m_sortEnable = false;
 }
 
 void BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state, uint8_t steps) {
@@ -45,6 +48,10 @@ void BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state, uint8_t step
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(steps & 0xff);
       this->m_sensorDataIdx++;
     }
+    if (!this->m_sortEnable) {
+      if (sensor_id < this->last_object_id) this->m_sortEnable = true;
+    }
+    last_object_id = sensor_id;
   }
   else {
     sendPacket();
@@ -63,6 +70,10 @@ void BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(((value * factor) >> (8 * i)) & 0xff);
       this->m_sensorDataIdx++;
     }
+    if (!this->m_sortEnable) {
+      if (sensor_id < this->last_object_id) this->m_sortEnable = true;
+    }
+    last_object_id = sensor_id;
   }
   else {
     sendPacket();
@@ -82,6 +93,10 @@ void BTHome::addMeasurement(uint8_t sensor_id, float value) {
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>((value2 >> (8 * i)) & 0xff);
       this->m_sensorDataIdx++;
     }
+    if (!this->m_sortEnable) {
+      if (sensor_id < this->last_object_id) this->m_sortEnable = true;
+    }
+    last_object_id = sensor_id;
   }
   else {
     sendPacket();
@@ -145,9 +160,9 @@ void BTHome::sortSensorData() {
   }
 }
 
-void BTHome::buildPaket(bool m_sortEnable) {
+void BTHome::buildPaket() {
   //the Object ids have to be applied in numerical order (from low to high)
-  if (m_sortEnable) sortSensorData();
+  if (this->m_sortEnable) sortSensorData();
 
   // Create the BLE Device
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
