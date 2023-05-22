@@ -114,7 +114,7 @@ class BTHome {
     void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL);
     void begin(String dname = "DIY-sensor", bool encryption = false, String key = "");
     void setDeviceName(String dname = "");
-    void buildPaket();
+    void buildPaket(bool m_sortEnable = true);
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();
@@ -129,6 +129,7 @@ class BTHome {
     uint16_t getFactor(uint8_t sens);
     uint8_t m_sensorDataIdx;
     byte m_sensorData[MEASUREMENT_MAX_LEN] = {0};
+    void sortSensorData();
     String dev_name;
     bool m_encryptEnable;
     uint32_t m_encryptCount;
