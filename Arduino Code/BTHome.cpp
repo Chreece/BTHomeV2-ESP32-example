@@ -16,11 +16,12 @@ void BTHome::begin(String dname, bool encryption, uint8_t const* const key) {
     mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
   }
   else this->m_encryptEnable = false;
+  resetMeasurement();
 }
 
 void BTHome::begin(String dname, bool encryption, String key) {
   uint8_t bind_key[BIND_KEY_LEN];
-  for (int i = 0; i < BIND_KEY_LEN; i++) {
+  for (uint8_t i = 0; i < BIND_KEY_LEN; i++) {
     bind_key[i] = strtol(key.substring(i * 2, i * 2 + 2).c_str(), NULL, BIND_KEY_LEN);
   }
   begin(dname, encryption, bind_key);
@@ -33,6 +34,8 @@ void BTHome::setDeviceName(String dname) {
 
 void BTHome::resetMeasurement() {
   this->m_sensorDataIdx = 0;
+  this->last_object_id = 0;
+  this->m_sortEnable = false;
 }
 
 void BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state, uint8_t steps) {
@@ -45,6 +48,10 @@ void BTHome::addMeasurement_state(uint8_t sensor_id, uint8_t state, uint8_t step
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(steps & 0xff);
       this->m_sensorDataIdx++;
     }
+    if (!this->m_sortEnable) {
+      if (sensor_id < this->last_object_id) this->m_sortEnable = true;
+    }
+    last_object_id = sensor_id;
   }
   else {
     sendPacket();
@@ -63,6 +70,10 @@ void BTHome::addMeasurement(uint8_t sensor_id, uint64_t value) {
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(((value * factor) >> (8 * i)) & 0xff);
       this->m_sensorDataIdx++;
     }
+    if (!this->m_sortEnable) {
+      if (sensor_id < this->last_object_id) this->m_sortEnable = true;
+    }
+    last_object_id = sensor_id;
   }
   else {
     sendPacket();
@@ -82,6 +93,10 @@ void BTHome::addMeasurement(uint8_t sensor_id, float value) {
       this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>((value2 >> (8 * i)) & 0xff);
       this->m_sensorDataIdx++;
     }
+    if (!this->m_sortEnable) {
+      if (sensor_id < this->last_object_id) this->m_sortEnable = true;
+    }
+    last_object_id = sensor_id;
   }
   else {
     sendPacket();
@@ -89,7 +104,65 @@ void BTHome::addMeasurement(uint8_t sensor_id, float value) {
   }
 }
 
+void BTHome::sortSensorData() {
+  uint8_t i, j, k, data_block_num;
+
+  struct DATA_BLOCK
+  {
+    byte object_id;
+    byte data[4];
+    uint8_t data_len;
+  };
+  struct DATA_BLOCK data_block[MEASUREMENT_MAX_LEN / 2 + 1];
+  struct DATA_BLOCK temp_data_block;
+
+  for (i = 0, j = 0, data_block_num = 0; j < this->m_sensorDataIdx; i++) {
+    //copy the object id
+    data_block[i].object_id = this->m_sensorData[j];
+    data_block_num++;
+    //copy the data length
+    if (this->m_sensorData[j] == EVENT_DIMMER) {
+      if (this->m_sensorData[j + 1] == EVENT_DIMMER_NONE)
+        data_block[i].data_len = 1;
+      else
+        data_block[i].data_len = 2;
+    }
+    else {
+      data_block[i].data_len = getByteNumber(this->m_sensorData[j]);
+    }
+    //copy the data
+    for (k = 0; k < data_block[i].data_len; k++) {
+      data_block[i].data[k] = this->m_sensorData[j + 1 + k];
+    }
+    //move to the next object id location
+    j = j + data_block[i].data_len + 1;
+  }
+
+  if (data_block_num > 1) {
+    //bubble sort
+    for (i = 0; i < data_block_num - 1; i++) {
+      for (j = 0; j < data_block_num - 1 - i; j++) {
+        if (data_block[j].object_id > data_block[j + 1].object_id) {
+          memcpy(&temp_data_block, &data_block[j], sizeof(struct DATA_BLOCK));
+          memcpy(&data_block[j], &data_block[j + 1], sizeof(struct DATA_BLOCK));
+          memcpy(&data_block[j + 1], &temp_data_block, sizeof(struct DATA_BLOCK));
+        }
+      }
+    }
+    //copy the new order to m_sensorData array
+    for (i = 0, j = 0; i < data_block_num && j < this->m_sensorDataIdx; i++) {
+      this->m_sensorData[j] = data_block[i].object_id;
+      for (k = 0; k < data_block[i].data_len; k++) {
+        this->m_sensorData[j + 1 + k] = data_block[i].data[k];
+      }
+      j = j + data_block[i].data_len + 1;
+    }
+  }
+}
+
 void BTHome::buildPaket() {
+  //the Object ids have to be applied in numerical order (from low to high)
+  if (this->m_sortEnable) sortSensorData();
 
   // Create the BLE Device
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
@@ -97,7 +170,7 @@ void BTHome::buildPaket() {
 
   std::string payloadData = "";
   std::string serviceData = "";
-  int i;
+  uint8_t i;
 
   //head
   payloadData += FLAG1;
@@ -222,11 +295,41 @@ void BTHome::sendPacket(uint32_t delay_ms)
 uint8_t BTHome::getByteNumber(uint8_t sens) {
   switch (sens)
   {
+    case ID_PACKET:
     case ID_BATTERY:
     case ID_COUNT:
     case ID_HUMIDITY:
     case ID_MOISTURE:
     case ID_UV:
+    case STATE_BATTERY_LOW:
+    case STATE_BATTERY_CHARHING:
+    case STATE_CO:
+    case STATE_COLD:
+    case STATE_CONNECTIVITY:
+    case STATE_DOOR:
+    case STATE_GARAGE_DOOR:
+    case STATE_GAS_DETECTED:
+    case STATE_GENERIC_BOOLEAN:
+    case STATE_HEAT:
+    case STATE_LIGHT:
+    case STATE_LOCK:
+    case STATE_MOISTURE:
+    case STATE_MOTION:
+    case STATE_MOVING:
+    case STATE_OCCUPANCY:
+    case STATE_OPENING:
+    case STATE_PLUG:
+    case STATE_POWER_ON:
+    case STATE_PRESENCE:
+    case STATE_PROBLEM:
+    case STATE_RUNNING:
+    case STATE_SAFETY:
+    case STATE_SMOKE:
+    case STATE_SOUND:
+    case STATE_TAMPER:
+    case STATE_VIBRATION:
+    case STATE_WINDOW:
+    case EVENT_BUTTON:
       return 1; break;
     case ID_DURATION:
     case ID_ENERGY:
