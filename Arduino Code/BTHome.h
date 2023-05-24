@@ -129,9 +129,12 @@ class BTHome {
     uint16_t getFactor(uint8_t sens);
     uint8_t m_sensorDataIdx;
     byte m_sensorData[MEASUREMENT_MAX_LEN] = {0};
+    void sortSensorData();
     String dev_name;
     bool m_encryptEnable;
     uint32_t m_encryptCount;
     mbedtls_ccm_context m_encryptCTX;
     uint8_t bindKey[BIND_KEY_LEN];
+    bool m_sortEnable;
+    byte last_object_id;
 };
