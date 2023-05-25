@@ -3,8 +3,6 @@
 An example BTHome v2 example with a presence and a count sensor
 Thanks [@countrysideboy](https://github.com/countrysideboy) for his contributions on Encryption and cleanup code, the most of the code is from his side!
 
-# Notice it's currently under development
-
 This is an example for a DIY [BTHome v2](https://bthome.io/) sensor.
 
 The original code is from: https://github.com/TheDigital1/ESP32_BTHome
