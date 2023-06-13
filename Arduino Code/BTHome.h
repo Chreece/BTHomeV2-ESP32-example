@@ -18,7 +18,9 @@
 #define SERVICE_DATA 0x16
 
 #define NO_ENCRYPT 0x40
+#define NO_ENCRYPT_TRIGGER_BASE 0x44
 #define ENCRYPT 0x41
+#define ENCRYPT_TRIGGER_BASE 0x45
 
 #define SHORT_NAME 0x08
 #define COMPLETE_NAME 0x09
@@ -114,7 +116,7 @@ class BTHome {
     void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL);
     void begin(String dname = "DIY-sensor", bool encryption = false, String key = "");
     void setDeviceName(String dname = "");
-    void buildPaket();
+    void buildPaket(bool trigger_based_device = false);
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();
