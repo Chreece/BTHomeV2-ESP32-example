@@ -1,6 +1,7 @@
-#include "esp_mac.h"
-#include "esp_random.h"
 #include "mbedtls/ccm.h"
+#if defined(ESP32)
+#include "esp_random.h"
+#endif
 
 #define BLE_ADVERT_MAX_LEN 31
 #define MEASUREMENT_MAX_LEN 23 //23=31(BLE_ADVERT_MAX_LEN)-3(FLAG)-1(SERVICE_DATA)-2(UUID)-1(ENCRYPT)-1(serviceData length bit)
@@ -113,10 +114,10 @@
 
 class BTHome {
   public:
-    void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL);
-    void begin(String dname = "DIY-sensor", bool encryption = false, String key = "");
+    void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL, bool trigger_based_device = false);
+    void begin(String dname = "DIY-sensor", bool encryption = false, String key = "", bool trigger_based_device = false);
     void setDeviceName(String dname = "");
-    void buildPaket(bool trigger_based_device = false);
+    void buildPaket();
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();
@@ -134,6 +135,7 @@ class BTHome {
     void sortSensorData();
     String dev_name;
     bool m_encryptEnable;
+    bool m_triggerdevice;
     uint32_t m_encryptCount;
     mbedtls_ccm_context m_encryptCTX;
     uint8_t bindKey[BIND_KEY_LEN];
