@@ -160,7 +160,7 @@ void BTHome::sortSensorData() {
   }
 }
 
-void BTHome::buildPaket() {
+void BTHome::buildPaket(bool trigger_based_device) {
   //the Object ids have to be applied in numerical order (from low to high)
   if (this->m_sortEnable) sortSensorData();
 
@@ -206,7 +206,10 @@ void BTHome::buildPaket() {
   serviceData += UUID2;  // DO NOT CHANGE -- UUID
   // The encryption
   if (this->m_encryptEnable) {
-    serviceData += ENCRYPT;
+    if (trigger_based_device)
+      serviceData += ENCRYPT_TRIGGER_BASE;
+    else
+      serviceData += ENCRYPT;
 
     uint8_t ciphertext[BLE_ADVERT_MAX_LEN];
     uint8_t encryptionTag[MIC_LEN];
@@ -239,7 +242,10 @@ void BTHome::buildPaket() {
     serviceData += encryptionTag[3];
   }
   else {
-    serviceData += NO_ENCRYPT;
+    if (trigger_based_device)
+      serviceData += NO_ENCRYPT_TRIGGER_BASE;
+    else
+      serviceData += NO_ENCRYPT;
     for (i = 0; i < this->m_sensorDataIdx; i++)
     {
       serviceData += this->m_sensorData[i]; // Add the sensor data to the Service Data
