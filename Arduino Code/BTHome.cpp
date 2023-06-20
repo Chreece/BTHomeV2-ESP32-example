@@ -4,27 +4,32 @@
 
 static BLEAdvertising *pAdvertising;
 
-void BTHome::begin(String dname, bool encryption, uint8_t const* const key) {
+void BTHome::begin(String dname, bool encryption, uint8_t const* const key, bool trigger_based_device) {
   BLEDevice::init("");
   pAdvertising = BLEDevice::getAdvertising();
   setDeviceName(dname);
   if (encryption) {
     this->m_encryptEnable = true;
+#if defined(ESP32)
     this->m_encryptCount = esp_random() % 0x427;
+#else
+    this->m_encryptCount = random(0, UINT32_MAX) % 0x427;
+#endif
     memcpy(bindKey, key, sizeof(uint8_t) * BIND_KEY_LEN);
     mbedtls_ccm_init(&this->m_encryptCTX);
     mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
   }
   else this->m_encryptEnable = false;
+  this->m_triggerdevice = trigger_based_device;
   resetMeasurement();
 }
 
-void BTHome::begin(String dname, bool encryption, String key) {
+void BTHome::begin(String dname, bool encryption, String key, bool trigger_based_device) {
   uint8_t bind_key[BIND_KEY_LEN];
   for (uint8_t i = 0; i < BIND_KEY_LEN; i++) {
     bind_key[i] = strtol(key.substring(i * 2, i * 2 + 2).c_str(), NULL, BIND_KEY_LEN);
   }
-  begin(dname, encryption, bind_key);
+  begin(dname, encryption, bind_key, trigger_based_device);
 }
 
 void BTHome::setDeviceName(String dname) {
@@ -160,7 +165,7 @@ void BTHome::sortSensorData() {
   }
 }
 
-void BTHome::buildPaket(bool trigger_based_device) {
+void BTHome::buildPaket() {
   //the Object ids have to be applied in numerical order (from low to high)
   if (this->m_sortEnable) sortSensorData();
 
@@ -206,7 +211,7 @@ void BTHome::buildPaket(bool trigger_based_device) {
   serviceData += UUID2;  // DO NOT CHANGE -- UUID
   // The encryption
   if (this->m_encryptEnable) {
-    if (trigger_based_device)
+    if (this->m_triggerdevice)
       serviceData += ENCRYPT_TRIGGER_BASE;
     else
       serviceData += ENCRYPT;
@@ -216,7 +221,14 @@ void BTHome::buildPaket(bool trigger_based_device) {
     //buildNonce
     uint8_t nonce[NONCE_LEN];
     uint8_t* countPtr  = (uint8_t*)(&this->m_encryptCount);
-    esp_read_mac(&nonce[0], ESP_MAC_BT);
+    const uint8_t *addrs = BLEDevice::getAddress().getNative();
+    nonce[0] = addrs[5];
+    nonce[1] = addrs[4];
+    nonce[2] = addrs[3];
+    nonce[3] = addrs[2];
+    nonce[4] = addrs[1];
+    nonce[5] = addrs[0];
+    //esp_read_mac(&nonce[0], ESP_MAC_BT);
     nonce[6] = UUID1;
     nonce[7] = UUID2;
     nonce[8] = ENCRYPT;
@@ -242,7 +254,7 @@ void BTHome::buildPaket(bool trigger_based_device) {
     serviceData += encryptionTag[3];
   }
   else {
-    if (trigger_based_device)
+    if (this->m_triggerdevice)
       serviceData += NO_ENCRYPT_TRIGGER_BASE;
     else
       serviceData += NO_ENCRYPT;
