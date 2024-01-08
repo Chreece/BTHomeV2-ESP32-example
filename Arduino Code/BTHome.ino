@@ -19,9 +19,9 @@ BTHome bthome;
 void setup() {
   Serial.begin(115200);
 #ifdef ENABLE_ENCRYPT
-  bthome.begin(DEVICE_NAME, true, BIND_KEY);
+  bthome.begin(DEVICE_NAME, true, BIND_KEY, false);
 #else
-  bthome.begin(DEVICE_NAME);
+  bthome.begin(DEVICE_NAME, false, "", false);
 #endif
 }
 
