@@ -42,6 +42,15 @@ void loop() {
   bthome.addMeasurement(ID_TVOC, (uint64_t)350);//3
   bthome.addMeasurement_state(EVENT_BUTTON, EVENT_BUTTON_PRESS);//2 button press
   bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
+
+  // TEXT data
+  String msg = "Sensor XYZ";
+  bthome.addMeasurement(ID_TEXT, (uint8_t *)msg.c_str(), msg.length());
+
+  // RAW data
+  uint8_t raw[] = "123";
+  bthome.addMeasurement(ID_RAW, raw, sizeof(raw)-1);
+
   bthome.sendPacket();
   bthome.stop();
 
