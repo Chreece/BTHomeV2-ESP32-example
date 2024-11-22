@@ -65,6 +65,8 @@
 #define ID_VOLUMEFR 0x49
 #define ID_UV 0x46
 #define ID_WATER 0x4F
+#define ID_TEXT 0x53
+#define ID_RAW 0x54
 
 #define STATE_BATTERY_LOW 0x15
 #define STATE_BATTERY_CHARHING 0x16
@@ -126,6 +128,7 @@ class BTHome {
     void addMeasurement_state(uint8_t sensor_id, uint8_t state, uint8_t steps = 0);
     void addMeasurement(uint8_t sensor_id, uint64_t value);
     void addMeasurement(uint8_t sensor_id, float value);
+    void addMeasurement(uint8_t sensor_id, uint8_t *value, uint8_t size);
 
   private:
     uint8_t getByteNumber(uint8_t sens);
