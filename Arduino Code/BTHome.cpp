@@ -109,6 +109,32 @@ void BTHome::addMeasurement(uint8_t sensor_id, float value) {
   }
 }
 
+// TEXT and RAW data
+void BTHome::addMeasurement(uint8_t sensor_id, uint8_t *value, uint8_t size) {
+  if ((this->m_sensorDataIdx + size + 1) <= (MEASUREMENT_MAX_LEN - (this->m_encryptEnable ? 8 : 0))) {
+    // Add sensor id
+    this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(sensor_id & 0xff);
+    this->m_sensorDataIdx++;
+    // Add data size, 1 byte
+    this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(size & 0xff);
+    this->m_sensorDataIdx++;
+    // Add data bytes
+    for (uint8_t i = 0; i < size; i++)
+    {
+      this->m_sensorData[this->m_sensorDataIdx] = static_cast<byte>(value[i] & 0xff);
+      this->m_sensorDataIdx++;
+    }
+    if (!this->m_sortEnable) {
+      if (sensor_id < this->last_object_id) this->m_sortEnable = true;
+    }
+    last_object_id = sensor_id;
+  }
+  else {
+    sendPacket();
+    addMeasurement(sensor_id, value, size);
+  }
+}
+
 void BTHome::sortSensorData() {
   uint8_t i, j, k, data_block_num;
 
