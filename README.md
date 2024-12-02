@@ -1,7 +1,8 @@
 # BTHomeV2 ESP32 Example
 # V2 of the example, simplified for least input
 An BTHome v2 example.
-Make your DIY sensor, BTHome compatible
+Make your DIY sensor, BTHome compatible.
+
 Thanks [@countrysideboy](https://github.com/countrysideboy) for his contributions on Encryption and cleanup code, the most of the code is from his side!
 
 This is an example for a DIY [BTHome v2](https://bthome.io/) sensor.
