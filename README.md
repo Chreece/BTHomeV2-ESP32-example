@@ -1,3 +1,6 @@
+# This project is no longer compatible with the changes from [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino/commit/edc66e8b6c992d4992602c091bcee26261aa77d3) library. You need to downgrade it in order to use this example.
+# There will be no longer any updates here unless someone makes a PR to support these changes
+
 # BTHomeV2 ESP32 Example
 # V2 of the example, simplified for least input
 An BTHome v2 example.
