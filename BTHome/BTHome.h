@@ -1,6 +1,12 @@
-#include "mbedtls/ccm.h"
+/*
+  BTHome Header file
+
+  Include the BTHome class declaration
+*/
+#include "mbedtls/ccm.h"    // Provides an API for the CCM authenticated encryption mode for block ciphers.
+
 #if defined(ESP32)
-#include "esp_random.h"
+  #include "esp_random.h"   // Expressif library to generate et one random 32-bit word from hardware
 #endif
 
 #define BLE_ADVERT_MAX_LEN 31
@@ -9,13 +15,19 @@
 #define NONCE_LEN 13
 #define MIC_LEN 4
 
-#define FLAG 0x020106
+//https://bthome.io/format/
+// Advertising Data (AD) elements
+// Each element contains the following:
+//    1st byte: length of the element (excluding the length byte itself)
+//    2nd byte: AD type - specifies what data type is included in the element
+//    AD data - one or more bytes - the meaning is defined by the AD type
+#define FLAG 0x020106     // Always the same for BTHome
 #define FLAG1 0x02
 #define FLAG2 0x01
 #define FLAG3 0x06
 #define UUID 0xD2FC
-#define UUID1 0xD2
-#define UUID2 0xFC
+#define UUID1 0xD2      // UUID first byte
+#define UUID2 0xFC      // UUID second byte
 #define SERVICE_DATA 0x16
 
 #define NO_ENCRYPT 0x40
@@ -23,6 +35,7 @@
 #define ENCRYPT 0x41
 #define ENCRYPT_TRIGGER_BASE 0x45
 
+// Local Name
 #define SHORT_NAME 0x08
 #define COMPLETE_NAME 0x09
 
@@ -37,8 +50,8 @@
 #define ID_DISTANCE 0x40
 #define ID_DISTANCEM 0x41
 #define ID_DURATION 0x42
-#define ID_ENERGY 0x0A
-#define ID_ENERGY4 0x4D
+#define ID_ENERGY 0x0A      // uint24: 3 bytes, kWh
+#define ID_ENERGY4 0x4D     // uint32: 4 bytes, kWh
 #define ID_GAS 0x4B
 #define ID_GAS4 0x4C
 #define ID_HUMIDITY 0x2E
@@ -50,7 +63,7 @@
 #define ID_MOISTURE_PRECISE 0x14
 #define ID_PM25 0x0D
 #define ID_PM10 0x0E
-#define ID_POWER 0x0B
+#define ID_POWER 0x0B       // uint24: 3 bytes, W
 #define ID_PRESSURE 0x04
 #define ID_ROTATION 0x3F
 #define ID_SPD 0x44
@@ -116,10 +129,10 @@
 
 class BTHome {
   public:
-    void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL, bool trigger_based_device = false);
     void begin(String dname = "DIY-sensor", bool encryption = false, String key = "", bool trigger_based_device = false);
+    void begin(String dname = "DIY-sensor", bool encryption = false, uint8_t const* const key = NULL, bool trigger_based_device = false);
     void setDeviceName(String dname = "");
-    void buildPaket();
+    void buildPacket();
     void start(uint32_t duration = 0);
     void stop();
     bool isAdvertising();

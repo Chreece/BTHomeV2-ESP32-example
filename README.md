@@ -1,5 +1,15 @@
-# The changes to the [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino/commit/edc66e8b6c992d4992602c091bcee26261aa77d3) library are no longer compatible with the project.
-# PRs are welcome but I'm no longer maintaining this example
+This repository demonstatrates how you to create your own Bluetooth Low Energy (BLE) on an ESP32 using the Arduino framework.
+
+The [BTHome v2](https://bthome.io/) sensor broadcasting standard is used so that Home Assistant will automatically discovery your device (the BTHome integration is required). BTHome allows you to create your own DIY device and send sensor data to Home Assistant over BLE rather that Wifi. This is a significantly more energy efficient approach, especially if you oplan to run your ESP32 on batteries.
+
+Tested on a TTGO ESP WROVER T8 v1.8, using NimBLE-Arduino v2.1.2
+
+This repository is a fork of the following repository. I have modified it to utilise [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino) v2.x. Thanks to everyone for their contributions. This is awesome.
+
+
+<hr/>
+~# The changes to the [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino/commit/edc66e8b6c992d4992602c091bcee26261aa77d3) library are no longer compatible with the project.~
+~# PRs are welcome but I'm no longer maintaining this example~
 
 # BTHomeV2 ESP32 Example
 # V2 of the example, simplified for least input

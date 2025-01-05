@@ -1,35 +1,54 @@
-#include "Arduino.h"
-#include "NimBLEDevice.h"
+/*
+  BTHome features
+*/
+#include <Arduino.h>
+#include <NimBLEDevice.h>   // v2.x
 #include "BTHome.h"
 
-static BLEAdvertising *pAdvertising;
+static BLEAdvertising *pAdvertising;    // From NimBLE
 
-void BTHome::begin(String dname, bool encryption, uint8_t const* const key, bool trigger_based_device) {
-  BLEDevice::init("");
-  pAdvertising = BLEDevice::getAdvertising();
-  setDeviceName(dname);
-  if (encryption) {
-    this->m_encryptEnable = true;
-#if defined(ESP32)
-    this->m_encryptCount = esp_random() % 0x427;
-#else
-    this->m_encryptCount = random(0, UINT32_MAX) % 0x427;
-#endif
-    memcpy(bindKey, key, sizeof(uint8_t) * BIND_KEY_LEN);
-    mbedtls_ccm_init(&this->m_encryptCTX);
-    mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
-  }
-  else this->m_encryptEnable = false;
-  this->m_triggerdevice = trigger_based_device;
-  resetMeasurement();
-}
+// Note: the BTHome class is declared in the header file
 
 void BTHome::begin(String dname, bool encryption, String key, bool trigger_based_device) {
+  /*
+    The 'begin' method of the BTHome class, used where a String encryption key is provided
+  */
   uint8_t bind_key[BIND_KEY_LEN];
   for (uint8_t i = 0; i < BIND_KEY_LEN; i++) {
     bind_key[i] = strtol(key.substring(i * 2, i * 2 + 2).c_str(), NULL, BIND_KEY_LEN);
   }
   begin(dname, encryption, bind_key, trigger_based_device);
+}
+
+void BTHome::begin(String dname, bool encryption, uint8_t const* const key, bool trigger_based_device) {
+  /*
+    The actual 'begin' method of the BTHome class
+
+    note:
+        uint8_t const* const key: The Bind Key. This is constant pointer to a constant of type uint8_t. => pointer itself cannot be modified, and neither can the data it points to.
+
+  */
+  BLEDevice::init("");
+  pAdvertising = BLEDevice::getAdvertising();
+  
+  setDeviceName(dname);
+
+  if (encryption) {
+    this->m_encryptEnable = true;
+    #if defined(ESP32)
+      this->m_encryptCount = esp_random() % 0x427;
+    #else
+      this->m_encryptCount = random(0, UINT32_MAX) % 0x427;
+    #endif
+    memcpy(bindKey, key, sizeof(uint8_t) * BIND_KEY_LEN);
+    mbedtls_ccm_init(&this->m_encryptCTX);
+    mbedtls_ccm_setkey(&this->m_encryptCTX, MBEDTLS_CIPHER_ID_AES, bindKey, BIND_KEY_LEN * 8);
+  } else {
+    this->m_encryptEnable = false;
+  }
+
+  this->m_triggerdevice = trigger_based_device;
+  resetMeasurement();
 }
 
 void BTHome::setDeviceName(String dname) {
@@ -191,8 +210,10 @@ void BTHome::sortSensorData() {
   }
 }
 
-void BTHome::buildPaket() {
+void BTHome::buildPacket() {
   //the Object ids have to be applied in numerical order (from low to high)
+  Serial.println("Building the BTHome packet...");
+
   if (this->m_sortEnable) sortSensorData();
 
   // Create the BLE Device
@@ -235,25 +256,26 @@ void BTHome::buildPaket() {
   serviceData += SERVICE_DATA;  // DO NOT CHANGE -- Service Data - 16-bit UUID
   serviceData += UUID1;  // DO NOT CHANGE -- UUID
   serviceData += UUID2;  // DO NOT CHANGE -- UUID
+
   // The encryption
   if (this->m_encryptEnable) {
     if (this->m_triggerdevice)
       serviceData += ENCRYPT_TRIGGER_BASE;
     else
       serviceData += ENCRYPT;
-
     uint8_t ciphertext[BLE_ADVERT_MAX_LEN];
     uint8_t encryptionTag[MIC_LEN];
     //buildNonce
     uint8_t nonce[NONCE_LEN];
     uint8_t* countPtr  = (uint8_t*)(&this->m_encryptCount);
-    const uint8_t *addrs = BLEDevice::getAddress().getNative();
-    nonce[0] = addrs[5];
-    nonce[1] = addrs[4];
-    nonce[2] = addrs[3];
-    nonce[3] = addrs[2];
-    nonce[4] = addrs[1];
-    nonce[5] = addrs[0];
+    // const uint8_t *addrs = BLEDevice::getAddress().getNative();
+    const ble_addr_t *addrs = BLEDevice::getAddress().getBase();
+    nonce[0] = addrs->val[5];
+    nonce[1] = addrs->val[4];
+    nonce[2] = addrs->val[3];
+    nonce[3] = addrs->val[2];
+    nonce[4] = addrs->val[1];
+    nonce[5] = addrs->val[0];
     //esp_read_mac(&nonce[0], ESP_MAC_BT);
     nonce[6] = UUID1;
     nonce[7] = UUID2;
@@ -294,7 +316,8 @@ void BTHome::buildPaket() {
   payloadData += sd_length;         // Add the length of the Service Data
   payloadData += serviceData;             // Finalize the packet
 
-  oAdvertisementData.addData(payloadData);
+  std::vector<uint8_t> payloadData_vector(payloadData.begin(), payloadData.end()); 
+  oAdvertisementData.addData(payloadData_vector);
   pAdvertising->setAdvertisementData(oAdvertisementData);
 
   //fill the local name into oScanResponseData
@@ -311,7 +334,7 @@ void BTHome::buildPaket() {
      - BLE_GAP_CONN_MODE_DIR (directed-connectable; 3.C.9.3.3).
      - BLE_GAP_CONN_MODE_UND (undirected-connectable; 3.C.9.3.4).
   */
-  pAdvertising->setAdvertisementType(BLE_GAP_CONN_MODE_NON);
+  pAdvertising->setConnectableMode(BLE_GAP_CONN_MODE_NON);
 }
 
 void BTHome::stop() {
@@ -326,11 +349,16 @@ bool BTHome::isAdvertising() {
   return pAdvertising->isAdvertising();
 }
 
-void BTHome::sendPacket(uint32_t delay_ms)
-{
+void BTHome::sendPacket(uint32_t delay_ms) {
+  /*
+    If there are some data then build the packet and start advertising
+  */
   if (this->m_sensorDataIdx > 0) {
-    buildPaket();
-    if (!isAdvertising()) start();
+    buildPacket();
+    if (!isAdvertising()){
+      // Start advertising
+      start();
+    } 
     delay(delay_ms);
     resetMeasurement();
   }
