@@ -34,42 +34,41 @@ void setup() {
 }
 
 void loop() {
-  // MEASUREMENT_MAX_LEN = 23, ENABLE_ENCRYPT will use extra 8 bytes, so each Measurement should smaller than 15
+  //MEASUREMENT_MAX_LEN = 23, ENABLE_ENCRYPT will use extra 8 bytes, so each Measurement should smaller than 15
 
-  // 1st method: just addMeasurement as much as you can, the code will split and send the advertising packet automatically
-  // Each adv packet sending lasts for 1500ms
+  // 1st method: just addMeasurement as much as you can, the code will split and send the adv packet automatically
+  // each adv packet sending lasts for 1500ms
   bthome.resetMeasurement();
   // bthome.addMeasurement(sensorid, value) you can use the sensorids from the BTHome.h file
-  // the Object ids of addMeasurement have to be applied in numerical order (from low to high) in your advertisement
-  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 35.00f);  // 3 bytes
-  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 40.00f);     // 3 bytes
-  bthome.addMeasurement(ID_PRESSURE, 1023.86f);           // 4 bytes
-  bthome.addMeasurement(ID_ILLUMINANCE, 50.81f);          // 4 bytes
-  bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);  // 2 bytes
-  bthome.addMeasurement(ID_CO2, (uint64_t)1208);          // 3 bytes
-  bthome.addMeasurement(ID_TVOC, (uint64_t)350);          // 3 bytes
+  // *** The Object ids of addMeasurement have to be applied in numerical order (from low to high) in your advertisement ***
+  bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 35.00f);//3
+  bthome.addMeasurement(ID_HUMIDITY_PRECISE, 40.00f);//3
+  bthome.addMeasurement(ID_PRESSURE, 1023.86f);//4
+  bthome.addMeasurement(ID_ILLUMINANCE, 50.81f);//4 bytes
+  bthome.addMeasurement_state(STATE_POWER_ON, STATE_ON);//2
+  bthome.addMeasurement(ID_CO2, (uint64_t)1208);//3
+  bthome.addMeasurement(ID_TVOC, (uint64_t)350);//3
   bthome.addMeasurement_state(EVENT_BUTTON, EVENT_BUTTON_PRESS);//2 button press
   bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
 
-  // // TEXT data
+  // TEXT data
   String msg = "Sensor XYZ";
   bthome.addMeasurement(ID_TEXT, (uint8_t *)msg.c_str(), msg.length());
 
-  // // RAW data
+  // RAW data
   uint8_t raw[] = "123";
   bthome.addMeasurement(ID_RAW, raw, sizeof(raw)-1);
 
-  bthome.sendPacket();    // Includes start advertising if required, delay(), resetMeasurement()
+  bthome.sendPacket();
   bthome.stop();
 
   // 2nd method: make sure each measurement data length <=15 and start(stop) manually
   bthome.resetMeasurement();
-
   bthome.addMeasurement(ID_TEMPERATURE_PRECISE, 26.00f);//3
   bthome.addMeasurement(ID_HUMIDITY_PRECISE, 70.00f);//3
   bthome.addMeasurement(ID_PRESSURE, 1000.86f);//4
   bthome.addMeasurement(ID_ILLUMINANCE, 1008.81f);//4 bytes
-  bthome.buildPacket();
+  bthome.buildPaket();
   bthome.start();//start the first adv data
   delay(1500);
 
@@ -79,12 +78,11 @@ void loop() {
   bthome.addMeasurement(ID_TVOC, (uint64_t)220);//3
   bthome.addMeasurement_state(EVENT_BUTTON, EVENT_BUTTON_PRESS);//2, button press
   bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
-  bthome.buildPacket();//change the adv data
+  bthome.buildPaket();//change the adv data
   delay(1500);
   bthome.stop();
 
-  // End of loop
-  delay(10000);   // Loop every 10 seconds
+  delay(10000);
 }
 
 //Object ids by order
