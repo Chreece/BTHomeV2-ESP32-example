@@ -43,6 +43,9 @@ void loop() {
   bthome.addMeasurement_state(EVENT_BUTTON, EVENT_BUTTON_PRESS);//2 button press
   bthome.addMeasurement_state(EVENT_DIMMER, EVENT_DIMMER_RIGHT, 6); //3, rotate right 6 steps
 
+  // Timestamp data, represented as UTC epoch
+  bthome.addMeasurement(ID_TIMESTAMP, (uint64_t)1738797643);
+
   // TEXT data
   String msg = "Sensor XYZ";
   bthome.addMeasurement(ID_TEXT, (uint8_t *)msg.c_str(), msg.length());

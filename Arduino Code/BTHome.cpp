@@ -387,6 +387,7 @@ uint8_t BTHome::getByteNumber(uint8_t sens) {
     case ID_GAS4:
     case ID_VOLUME:
     case ID_WATER:
+    case ID_TIMESTAMP:
       return 4; break;
     default:
       return 2;
