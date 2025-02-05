@@ -65,6 +65,7 @@
 #define ID_VOLUMEFR 0x49
 #define ID_UV 0x46
 #define ID_WATER 0x4F
+#define ID_TIMESTAMP 0x50
 #define ID_TEXT 0x53
 #define ID_RAW 0x54
 
