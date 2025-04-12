@@ -247,7 +247,7 @@ void BTHome::buildPaket() {
     //buildNonce
     uint8_t nonce[NONCE_LEN];
     uint8_t* countPtr  = (uint8_t*)(&this->m_encryptCount);
-    const uint8_t *addrs = BLEDevice::getAddress().getNative();
+    const uint8_t *addrs = BLEDevice::getAddress().getVal();
     nonce[0] = addrs[5];
     nonce[1] = addrs[4];
     nonce[2] = addrs[3];
@@ -294,7 +294,8 @@ void BTHome::buildPaket() {
   payloadData += sd_length;         // Add the length of the Service Data
   payloadData += serviceData;             // Finalize the packet
 
-  oAdvertisementData.addData(payloadData);
+  std::vector<uint8_t> data(payloadData.begin(), payloadData.end());
+  oAdvertisementData.addData(data);
   pAdvertising->setAdvertisementData(oAdvertisementData);
 
   //fill the local name into oScanResponseData
@@ -305,13 +306,7 @@ void BTHome::buildPaket() {
   }
   pAdvertising->setScanResponseData(oScanResponseData);
 
-  /**  pAdvertising->setAdvertisementType(ADV_TYPE_NONCONN_IND);
-       Advertising mode. Can be one of following constants:
-     - BLE_GAP_CONN_MODE_NON (non-connectable; 3.C.9.3.2).
-     - BLE_GAP_CONN_MODE_DIR (directed-connectable; 3.C.9.3.3).
-     - BLE_GAP_CONN_MODE_UND (undirected-connectable; 3.C.9.3.4).
-  */
-  pAdvertising->setAdvertisementType(BLE_GAP_CONN_MODE_NON);
+  pAdvertising->setConnectableMode(0);
 }
 
 void BTHome::stop() {
