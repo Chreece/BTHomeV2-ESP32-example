@@ -1,0 +1,28 @@
+name: One-time README voluntary support update
+on:
+  push:
+    paths: [.github/workflows/_one_time_add_voluntary_support.yml]
+permissions:
+  contents: write
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('README.md')
+          if not p.exists(): raise SystemExit('README.md not found')
+          t=p.read_text(encoding='utf-8'); link='https://ko-fi.com/chreece'; marker='## ❤️ Voluntary support'; top=f'💙 **Enjoying this hobby project? [Send a voluntary thank-you via Ko-fi]({link}).**'
+          if link not in t:
+              lines=t.splitlines(); i=1 if lines and lines[0].startswith('# ') else 0; lines[i:i]=['',top,'']; t='\n'.join(lines).rstrip()+'\n'
+          if marker not in t:
+              t=t.rstrip()+f'''\n\n{marker}\n\nThis is a private hobby project maintained in my free time and provided independently of contributions.\n\nIf you enjoy the project and would like to send me a voluntary personal thank-you, you can use **[Ko-fi]({link})**.\n\nContributions are completely optional and do **not** buy or guarantee features, support, development work, early access, priority, or any other service. This is not a charitable donation and no donation receipt is issued.\n'''
+          p.write_text(t.rstrip()+'\n',encoding='utf-8')
+          PY
+          if git diff --quiet -- README.md; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md && git commit -m 'docs: add voluntary hobby support link' && git push
