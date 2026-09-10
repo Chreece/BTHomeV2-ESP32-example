@@ -1,5 +1,7 @@
 # PRs are welcome but I'm no longer maintaining this example
 
+💙 **Enjoying this hobby project? [Send a voluntary thank-you via Ko-fi](https://ko-fi.com/chreece).**
+
 # BTHomeV2 ESP32 Example
 # V2 of the example, simplified for least input
 An BTHome v2 example.
@@ -31,3 +33,11 @@ DONE!
 
 Read the comments in the code for more info. 
 For the object ids consider using the variables from BTHome.h instead.
+
+## ❤️ Voluntary support
+
+This is a private hobby project maintained in my free time and provided independently of contributions.
+
+If you enjoy the project and would like to send me a voluntary personal thank-you, you can use **[Ko-fi](https://ko-fi.com/chreece)**.
+
+Contributions are completely optional and do **not** buy or guarantee features, support, development work, early access, priority, or any other service. This is not a charitable donation and no donation receipt is issued.
