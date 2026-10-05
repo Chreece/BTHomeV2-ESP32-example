@@ -7,8 +7,6 @@
 
 # PRs are welcome but I'm no longer maintaining this example
 
-💙 **Enjoying this hobby project? [Send a voluntary thank-you via Ko-fi](https://ko-fi.com/chreece).**
-
 # BTHomeV2 ESP32 Example
 # V2 of the example, simplified for least input
 An BTHome v2 example.
